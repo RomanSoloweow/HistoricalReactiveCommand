@@ -15,8 +15,8 @@ namespace HistoricalReactiveCommand.History
             RedoCommand = ReactiveCommand.CreateFromObservable(reactiveHistory.Redo, reactiveHistory.CanRedo, outputScheduler);
             ClearHistory = ReactiveCommand.CreateFromObservable(reactiveHistory.Clear, reactiveHistory.CanClear, outputScheduler);
         }
-        ReactiveCommand<Unit, Unit> UndoCommand { get; }
-        ReactiveCommand<Unit, Unit> RedoCommand { get; }
-        ReactiveCommand<Unit, Unit> ClearHistory { get; }
+        public ReactiveCommand<Unit, Unit> UndoCommand { get; }
+        public ReactiveCommand<Unit, Unit> RedoCommand { get; }
+        public ReactiveCommand<Unit, Unit> ClearHistory { get; }
     }
 }
