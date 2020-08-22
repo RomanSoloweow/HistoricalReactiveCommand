@@ -1,5 +1,4 @@
-[![](https://img.shields.io/github/stars/RomanSoloweow/HistoricalReactiveCommand)](https://github.com/RomanSoloweow/HistoricalReactiveCommand) [![](https://img.shields.io/github/license/RomanSoloweow/HistoricalReactiveCommand)](https://github.com/RomanSoloweow/HistoricalReactiveCommand) [![](https://img.shields.io/github/languages/code-size/RomanSoloweow/HistoricalReactiveCommand)](https://github.com/RomanSoloweow/HistoricalReactiveCommand) 
- ![]( https://img.shields.io/github/last-commit/RomanSoloweow/HistoricalReactiveCommand/master)
+[![](https://img.shields.io/github/stars/RomanSoloweow/HistoricalReactiveCommand)](https://github.com/RomanSoloweow/HistoricalReactiveCommand) [![](https://img.shields.io/github/languages/code-size/RomanSoloweow/HistoricalReactiveCommand)](https://github.com/RomanSoloweow/HistoricalReactiveCommand) [![]( https://img.shields.io/github/last-commit/RomanSoloweow/HistoricalReactiveCommand/master)](https://github.com/RomanSoloweow/HistoricalReactiveCommand) [![](https://img.shields.io/github/license/RomanSoloweow/HistoricalReactiveCommand)](https://github.com/RomanSoloweow/HistoricalReactiveCommand)
 # HistoricalReactiveCommand
 HistoricalReactiveCommand for ReactiveUI
 
