@@ -1,11 +1,12 @@
 ﻿using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.Reactive;
 using System.Text;
 
 namespace HistoricalReactiveCommand
 {
-    public interface IReactiveCommandWithUndoRedo:IReactiveCommand
+    public interface IReactiveCommandWithHistory : IReactiveCommand
     {
         IObservable<bool> IsUndoing { get; }
         IObservable<bool> IsRedoing { get; }
@@ -13,7 +14,7 @@ namespace HistoricalReactiveCommand
         IObservable<bool> CanUndo { get; }
         IObservable<bool> CanRedo { get; }
 
-        void Undo();
-        void Redo();
+        IObservable<Unit> Undo();
+        IObservable<Unit> Redo();
     }
 }

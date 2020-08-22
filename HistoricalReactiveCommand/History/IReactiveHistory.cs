@@ -1,10 +1,10 @@
-﻿using ReactiveUI;
-using System;
+﻿using System;
 using System.Reactive;
+using ReactiveUI;
 
-namespace HistoricalReactiveCommand
+namespace HistoricalReactiveCommand.History
 {
-    public interface IReactiveCommandHistory
+    public interface IReactiveHistory
     {
         IObservable<bool> CanUndo { get; }
         IObservable<bool> IsUndoing { get; }
@@ -19,7 +19,7 @@ namespace HistoricalReactiveCommand
         ReactiveCommand<Unit, Unit> Redo { get; }
         ReactiveCommand<Unit, Unit> Clear { get; }
 
-        IReactiveCommandWithUndoRedo AddInRedo(IReactiveCommandWithUndoRedo command);
-        IReactiveCommandWithUndoRedo AddInUndo(IReactiveCommandWithUndoRedo command);
+        IReactiveCommandWithHistory AddInRedo(IReactiveCommandWithHistory command);
+        IReactiveCommandWithHistory AddInUndo(IReactiveCommandWithHistory command);
     }
 }

@@ -1,16 +1,16 @@
-﻿using ReactiveUI;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using ReactiveUI;
 
-namespace HistoricalReactiveCommand
+namespace HistoricalReactiveCommand.History
 {
-    public class ReactiveCommandHistory: IReactiveCommandHistory, IDisposable
+    public class ReactiveHistory: IReactiveHistory, IDisposable
     {
-        public ReactiveCommandHistory(IObservable<bool>? canUndo, IObservable<bool>? canRedo, IObservable<bool>? canClear, IScheduler? scheduler)
+        public ReactiveHistory(IObservable<bool>? canUndo, IObservable<bool>? canRedo, IObservable<bool>? canClear, IScheduler? scheduler)
         {
             Undo = ReactiveCommand.Create(UndoCommand, CanUndo, scheduler);
             Redo = ReactiveCommand.Create(RedoCommand, CanRedo, scheduler);
@@ -72,15 +72,25 @@ namespace HistoricalReactiveCommand
 
         }
 
-        public Stack<IReactiveCommandWithUndoRedo> StackRedo { get; set; } = new Stack<IReactiveCommandWithUndoRedo>();
+        public Stack<IReactiveCommandWithHistory> StackRedo { get; set; } = new Stack<IReactiveCommandWithHistory>();
 
-        public Stack<IReactiveCommandWithUndoRedo> StackUndo { get; set; } = new Stack<IReactiveCommandWithUndoRedo>();
+        public Stack<IReactiveCommandWithHistory> StackUndo { get; set; } = new Stack<IReactiveCommandWithHistory>();
 
         public ReactiveCommand<Unit, Unit> Undo { get; }
 
         public ReactiveCommand<Unit, Unit> Redo { get; }
 
         public ReactiveCommand<Unit, Unit> Clear { get; }
+        
+        public void AddInRedo<TParam, TResult>(IReactiveHistoryElement<TParam, TResult> element)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddInUndo<TParam, TResult>(IReactiveHistoryElement<TParam, TResult> element)
+        {
+            throw new NotImplementedException();
+        }
 
         public IObservable<bool> CanUndo { get; }
         public IObservable<bool> CanRedo { get; }
@@ -90,13 +100,13 @@ namespace HistoricalReactiveCommand
         public IObservable<bool> IsRedoing { get; }
         public IObservable<bool> IsClearing { get; }
 
-        public IReactiveCommandWithUndoRedo AddInRedo(IReactiveCommandWithUndoRedo command)
+        public IReactiveCommandWithHistory AddInRedo(IReactiveCommandWithHistory command)
         {
             StackRedo.Push(command);
             return command;
         }
 
-        public IReactiveCommandWithUndoRedo AddInUndo(IReactiveCommandWithUndoRedo command)
+        public IReactiveCommandWithHistory AddInUndo(IReactiveCommandWithHistory command)
         {
             StackUndo.Push(command);
             return command;
@@ -106,7 +116,7 @@ namespace HistoricalReactiveCommand
         {
             if (StackRedo.Count > 0)
             {
-                IReactiveCommandWithUndoRedo last = StackRedo.Pop();
+                IReactiveCommandWithHistory last = StackRedo.Pop();
                 last.Redo();
             }
         }
@@ -114,7 +124,7 @@ namespace HistoricalReactiveCommand
         {
             if (StackUndo.Count > 0)
             {
-                IReactiveCommandWithUndoRedo last = StackUndo.Pop();
+                IReactiveCommandWithHistory last = StackUndo.Pop();
                 last.Undo();
             }
         }
