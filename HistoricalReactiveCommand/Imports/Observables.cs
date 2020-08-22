@@ -2,7 +2,7 @@
 using System.Reactive;
 using System.Reactive.Linq;
 
-namespace HistoricalReactiveCommand
+namespace HistoricalReactiveCommand.Imports
 {
     /// <summary>
     /// Provides commonly required, statically-allocated, pre-canned observables.

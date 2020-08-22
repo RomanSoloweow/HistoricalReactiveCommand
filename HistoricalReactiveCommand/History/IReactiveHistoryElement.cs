@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace HistoricalReactiveCommand
+﻿namespace HistoricalReactiveCommand.History
 {
-    public interface IReactiveHistoryElement<TParameter, TResult>: IReactiveCommandWithUndoRedo
+    public interface IReactiveHistoryElement<TParameter, TResult> : IReactiveCommandWithHistory
     {
         TParameter Parameter { get; set; }
         TResult Result { get; set; }
