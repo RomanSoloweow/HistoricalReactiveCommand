@@ -1,11 +1,9 @@
-﻿using ReactiveUI;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Text;
+using ReactiveUI;
 
-namespace HistoricalReactiveCommand.Sandbox.Helpers
+namespace HistoricalReactiveCommand.Sandbox.Helpers.Extensions
 {
     public static class BindingExtensions
     {

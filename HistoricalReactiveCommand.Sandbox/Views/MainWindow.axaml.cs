@@ -6,6 +6,7 @@ using HistoricalReactiveCommand.Sandbox.Helpers;
 using HistoricalReactiveCommand.Sandbox.ViewModels;
 using ReactiveUI;
 using System.Reactive.Disposables;
+using HistoricalReactiveCommand.Sandbox.Helpers.Extensions;
 
 namespace HistoricalReactiveCommand.Sandbox.Views
 {
