@@ -9,29 +9,29 @@ using Xunit;
 
 namespace HistoricalReactiveCommand.Tests
 {
-    public class ReactiveCommandWithHistoryTest
-    {
-        private readonly IReactiveHistory _dummyHistory = new DummyReactiveHistory();
+    //public class ReactiveCommandWithHistoryTest
+    //{
+    //    private readonly IReactiveHistory _dummyHistory = new DummyReactiveHistory();
 
-        [Fact]
-        public void CanExecuteChangedIsAvailableViaICommand()
-        {
-            Subject<bool> canExecuteSubject = new Subject<bool>();
-            ICommand fixture = new ReactiveCommandWithHistory<Unit, Unit>(
-                unit => Observables.Unit,
-                canExecuteSubject,
-                Scheduler.Immediate,
-                _dummyHistory);
+    //    [Fact]
+    //    public void CanExecuteChangedIsAvailableViaICommand()
+    //    {
+    //        Subject<bool> canExecuteSubject = new Subject<bool>();
+    //        ICommand fixture = new ReactiveCommandWithHistory<Unit, Unit>(
+    //            unit => Observables.Unit,
+    //            canExecuteSubject,
+    //            Scheduler.Immediate,
+    //            _dummyHistory);
 
-            List<bool> canExecuteChanged = new List<bool>();
-            fixture.CanExecuteChanged += (s, e) => canExecuteChanged.Add(fixture.CanExecute(null));
+    //        List<bool> canExecuteChanged = new List<bool>();
+    //        fixture.CanExecuteChanged += (s, e) => canExecuteChanged.Add(fixture.CanExecute(null));
 
-            canExecuteSubject.OnNext(true);
-            canExecuteSubject.OnNext(false);
+    //        canExecuteSubject.OnNext(true);
+    //        canExecuteSubject.OnNext(false);
 
-            Assert.Equal(2, canExecuteChanged.Count);
-            Assert.True(canExecuteChanged[0]);
-            Assert.False(canExecuteChanged[1]);
-        }
-    }
+    //        Assert.Equal(2, canExecuteChanged.Count);
+    //        Assert.True(canExecuteChanged[0]);
+    //        Assert.False(canExecuteChanged[1]);
+    //    }
+    //}
 }
