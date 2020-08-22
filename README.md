@@ -2,3 +2,9 @@
  ![]( https://img.shields.io/github/last-commit/RomanSoloweow/HistoricalReactiveCommand/master)
 # HistoricalReactiveCommand
 HistoricalReactiveCommand for ReactiveUI
+
+## License📑
+
+Copyright (c) SimpleStateMachine
+
+Licensed under the [MIT](LICENSE) license.
