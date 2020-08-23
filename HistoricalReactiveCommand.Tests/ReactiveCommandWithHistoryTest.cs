@@ -9,29 +9,33 @@ using Xunit;
 
 namespace HistoricalReactiveCommand.Tests
 {
-    //public class ReactiveCommandWithHistoryTest
-    //{
-    //    private readonly IReactiveHistory _dummyHistory = new DummyReactiveHistory();
+    public class ReactiveCommandWithHistoryTest
+    {
+        private readonly IHistoryCommandRegistry _registry = new DefaultHistoryCommandRegistry();
+        private readonly IHistory _history = new InMemoryHistory();
+        
+        [Fact]
+        public void CanExecuteChangedIsAvailableViaICommand()
+        {
+            Subject<bool> canExecuteSubject = new Subject<bool>();
+            ICommand fixture = new ReactiveCommandWithHistory<Unit, Unit>(
+                (parameter, result) => Observables.Unit,
+                (parameter, result) => Observables.Unit,
+                _registry,
+                _history,
+                "CommandKey",
+                canExecuteSubject,
+                Scheduler.Immediate);
+            
+            List<bool> canExecuteChanged = new List<bool>();
+            fixture.CanExecuteChanged += (s, e) => canExecuteChanged.Add(fixture.CanExecute(null));
 
-    //    [Fact]
-    //    public void CanExecuteChangedIsAvailableViaICommand()
-    //    {
-    //        Subject<bool> canExecuteSubject = new Subject<bool>();
-    //        ICommand fixture = new ReactiveCommandWithHistory<Unit, Unit>(
-    //            unit => Observables.Unit,
-    //            canExecuteSubject,
-    //            Scheduler.Immediate,
-    //            _dummyHistory);
+            canExecuteSubject.OnNext(true);
+            canExecuteSubject.OnNext(false);
 
-    //        List<bool> canExecuteChanged = new List<bool>();
-    //        fixture.CanExecuteChanged += (s, e) => canExecuteChanged.Add(fixture.CanExecute(null));
-
-    //        canExecuteSubject.OnNext(true);
-    //        canExecuteSubject.OnNext(false);
-
-    //        Assert.Equal(2, canExecuteChanged.Count);
-    //        Assert.True(canExecuteChanged[0]);
-    //        Assert.False(canExecuteChanged[1]);
-    //    }
-    //}
+            Assert.Equal(2, canExecuteChanged.Count);
+            Assert.True(canExecuteChanged[0]);
+            Assert.False(canExecuteChanged[1]);
+        }
+    }
 }

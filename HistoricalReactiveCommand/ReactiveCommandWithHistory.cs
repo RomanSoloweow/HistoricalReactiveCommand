@@ -1,52 +1,46 @@
 ﻿using ReactiveUI;
 using System;
-using System.Reactive;
 using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
-using HistoricalReactiveCommand.History;
-using HistoricalReactiveCommand.Imports;
 
 [assembly: InternalsVisibleTo("HistoricalReactiveCommand.Tests")]
-
 namespace HistoricalReactiveCommand
 {
-   
-    public class ReactiveCommandWithHistory<TParam, TResult> : ReactiveCommandBase<TParam, TResult>, IReactiveHistoryElement
+    public sealed class ReactiveCommandWithHistory<TParam, TResult> : ReactiveCommandBase<TParam, TResult>, IHistoryCommand
     {
-
         private readonly IDisposable _canExecuteSubscription;
-        private readonly Func<TParam, IObservable<TResult>> _execute;
+        private readonly ReactiveCommand<TParam, TResult> _discard;
         private readonly ReactiveCommand<TParam, TResult> _inner;
-        private readonly IObservable<bool> _canExecute;
-        private readonly IScheduler _outputScheduler;
-        private readonly IReactiveHistory _history;
+        private readonly string _commandKey;
 
         internal ReactiveCommandWithHistory(
-            Func<TParam, IObservable<TResult>>? execute,
-            IObservable<bool>? canExecute,
-            IScheduler? outputScheduler,
-            IReactiveHistory? history)
+            Func<TParam, TResult, IObservable<TResult>> execute,
+            Func<TParam, TResult, IObservable<TResult>> discard,
+            IHistoryCommandRegistry registry,
+            IHistory history,
+            string commandKey,
+            IObservable<bool> canExecute,
+            IScheduler outputScheduler)
         {
-            if (history == null)
-            {
-                throw new ArgumentNullException(nameof(history));
-            }
-
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _canExecute = canExecute ?? throw new ArgumentNullException(nameof(canExecute));
-            _outputScheduler = outputScheduler ?? throw new ArgumentNullException(nameof(outputScheduler));
-            _history = history ?? throw new ArgumentNullException(nameof(history));
-
-            _inner = ReactiveCommand.CreateFromObservable(execute, canExecute, outputScheduler);
-            _canExecuteSubscription = _canExecute.Subscribe(OnCanExecuteChanged);
-
-
-            History = new ReactiveCommandHistory(history, outputScheduler);
+            _commandKey = commandKey;
+            _discard = ReactiveCommand.CreateFromObservable<TParam, TResult>(
+                param => discard(param, (TResult) Result), 
+                canExecute,
+                outputScheduler);
+            
+            _inner = ReactiveCommand.CreateFromObservable<TParam, TResult>(
+                param => execute(param, (TResult) Result)
+                    .Do(result => history.Snapshot(param, result, commandKey)),
+                canExecute,
+                outputScheduler);
+            
+            _canExecuteSubscription = canExecute.Subscribe(OnCanExecuteChanged);
+            History = new ReactiveCommandHistory<TParam, TResult>(this, registry, history, outputScheduler);
+            registry.RegisterCommand(commandKey, this);
         }
-        public ReactiveCommandHistory History { get; }
-        public object Parameter { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public object Result { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public string CommandKey => throw new NotImplementedException();
+        
+        public ReactiveCommandHistory<TParam, TResult> History { get; }
 
         public override IObservable<bool> CanExecute => _inner.CanExecute;
 
@@ -60,7 +54,25 @@ namespace HistoricalReactiveCommand
 
         protected override void Dispose(bool disposing)
         {
+            _canExecuteSubscription.Dispose();
+            _discard.Dispose();
             _inner.Dispose();
         }
+
+        public object? Result { get; set; }
+        
+        object? IHistoryEntry.Parameter { get; }
+        
+        string IHistoryEntry.CommandKey => _commandKey;
+
+        IObservable<object?> IHistoryCommand.Execute(object? parameter) => 
+            _inner
+                .Execute((TParam) parameter)
+                .Select(result => result as object);
+
+        IObservable<object?> IHistoryCommand.Discard(object? parameter) => 
+            _discard
+                .Execute((TParam) parameter)
+                .Select(result => result as object);
     }
 }
