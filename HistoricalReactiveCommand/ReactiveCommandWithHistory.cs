@@ -1,6 +1,6 @@
 ﻿using HistoricalReactiveCommand.History;
 using ReactiveUI;
-using SimpleStateMachineNodeEditor.Helpers.Extensions;
+
 using System;
 using System.ComponentModel.Design;
 using System.Reactive;

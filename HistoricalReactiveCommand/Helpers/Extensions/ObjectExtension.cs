@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SimpleStateMachineNodeEditor.Helpers.Extensions
+namespace HistoricalReactiveCommand.Helpers.Extensions
 {
     public static class ObjectExtension
     {
