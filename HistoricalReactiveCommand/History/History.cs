@@ -1,12 +1,14 @@
-﻿using System;
+﻿using HistoricalReactiveCommand.Imports;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 namespace HistoricalReactiveCommand.History
 {
-    public class InMemoryHistory : IHistory, IDisposable
+    public class ReactiveHistory : IHistory, IDisposable
     {
         private readonly Subject<bool> _canUndo = new Subject<bool>();
         private readonly Subject<bool> _canRedo = new Subject<bool>();
@@ -22,44 +24,41 @@ namespace HistoricalReactiveCommand.History
 
         public IObservable<bool> CanClear => _canClear.AsObservable();
 
-        public IHistoryEntry Undo()
+        public IObservable<Unit> Undo(ICommandExecutor executor)
         {
             if (StackUndo.Count == 0)
                 throw new Exception();
             
-            IHistoryEntry last = StackUndo.Pop();
-            StackRedo.Push(last);
+            IHistoryEntry entry = StackUndo.Pop();
+            var observable = executor.Discard(entry);
+            StackRedo.Push(entry);
             UpdateSubjects();
-            return last;
+            return observable;
         }
 
-        public IHistoryEntry Redo()
+        public IObservable<Unit> Redo(ICommandExecutor executor)
         {
             if (StackRedo.Count == 0)
                 throw new Exception();
             
-            IHistoryEntry last = StackRedo.Pop();
-            StackUndo.Push(last);
-            UpdateSubjects();
-            return last;
-        }
-
-        public void Snapshot(object parameter, object result, string commandKey)
-        {
-            var entry = new HistoryEntry(parameter, result, commandKey);
+            IHistoryEntry entry = StackRedo.Pop();
+            var observable = executor.Execute(entry);
             StackUndo.Push(entry);
             UpdateSubjects();
+            return observable;
         }
 
-        public void Clear()
+        public IObservable<Unit> Clear()
         {
             StackRedo.Clear();
             StackUndo.Clear();
             UpdateSubjects();
+            return Observables.Unit;
         }
 
         public void Snapshot(IHistoryEntry historyElement)
         {
+            StackRedo.Clear();
             StackUndo.Push(historyElement);
             UpdateSubjects();
         }
@@ -83,19 +82,6 @@ namespace HistoricalReactiveCommand.History
             _canRedo.OnNext(hasRedoEntries);
             _canClear.OnNext(hasUndoEntries || hasRedoEntries);
         }
-        
-        private sealed class HistoryEntry : IHistoryEntry
-        {
-            public HistoryEntry(object? parameter, object? result, string commandKey)
-            {
-                Parameter = parameter;
-                Result = result;
-                CommandKey = commandKey;
-            }
-            
-            public object? Parameter { get; }
-            public object? Result { get; }
-            public string CommandKey { get; }
-        }
+       
     }
 }

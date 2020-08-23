@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive;
 
 namespace HistoricalReactiveCommand
 {
@@ -8,10 +9,11 @@ namespace HistoricalReactiveCommand
         IObservable<bool> CanRedo { get; }
         IObservable<bool> CanClear { get; }
 
-        IHistoryEntry Undo();
-        IHistoryEntry Redo();
+        IObservable<Unit> Undo(ICommandExecutor executor);
+        IObservable<Unit> Redo(ICommandExecutor executor);
+        IObservable<Unit> Clear();
 
-        void Snapshot(object parameter, object result, string commandKey);
-        void Clear();
+        void Snapshot(IHistoryEntry entry);
+       
     }
 }
