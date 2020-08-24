@@ -7,10 +7,25 @@ using Splat;
 
 namespace HistoricalReactiveCommand
 {
+    public static class History
+    {
+        public static HistoryContext GetContext(IHistory? history = null, IScheduler? outputScheduler = null)
+        {
+            var resolvedHistory = history ?? Locator.Current.GetService<IHistory>();
+            var existingContext = Locator.Current.GetService<HistoryContext>(resolvedHistory.Name);
+            if (existingContext != null) return existingContext;
+            
+            var context = new HistoryContext(resolvedHistory, outputScheduler ?? RxApp.MainThreadScheduler);
+            Locator.CurrentMutable.RegisterConstant(context, typeof(HistoryContext), resolvedHistory.Name);
+            return context;
+        }
+    }
+    
     public sealed class HistoryContext : IDisposable
     {
         internal HistoryContext(IHistory history, IScheduler outputScheduler)
         {
+            CanRecord = history.CanRecord;
             Undo = ReactiveCommand.CreateFromObservable<Unit, HistoryEntry>(
                 unit => history.Undo(entry => ResolveCommand(entry).Discard(entry)), 
                 history.CanUndo, 
@@ -26,6 +41,8 @@ namespace HistoricalReactiveCommand
                 history.CanClear, 
                 outputScheduler);
         }
+        
+        public IObservable<bool> CanRecord { get; }
         
         public ReactiveCommand<Unit, HistoryEntry> Undo { get; }
         

@@ -14,7 +14,7 @@ namespace HistoricalReactiveCommand.Tests
         private const string CommandKey = "command-key";
         private readonly Subject<bool> _canExecuteSubject = new Subject<bool>();
         private readonly IScheduler _scheduler = Scheduler.Immediate;
-        private readonly IHistory _history = new History.History();
+        private readonly IHistory _history = new DefaultHistory();
        
         [Fact]
         public void CanExecuteChangedIsAvailableViaICommand()
@@ -57,6 +57,9 @@ namespace HistoricalReactiveCommand.Tests
 
             fixture.History.Redo.Execute().Subscribe();
             Assert.Equal(1, latestProducedNumber);
+            
+            fixture.History.Undo.Execute().Subscribe();
+            Assert.Equal(0, latestProducedNumber);
         }
     }
 }

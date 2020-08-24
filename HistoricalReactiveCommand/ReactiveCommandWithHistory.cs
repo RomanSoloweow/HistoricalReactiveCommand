@@ -21,11 +21,8 @@ namespace HistoricalReactiveCommand
             IScheduler? outputScheduler = null,
             IHistory? history = null)
         {
-            if (commandKey == null) throw new ArgumentNullException(nameof(commandKey));
-            if (execute == null) throw new ArgumentNullException(nameof(execute));
-            if (discard == null) throw new ArgumentNullException(nameof(discard));
-            
-            return new ReactiveCommandWithHistory<TParam, TResult>(
+            return CreateWithHistoryFromObservable<TParam, TResult>(
+                commandKey,
                 (param, result) => Observable.Create<TResult>(
                     observer =>
                     {
@@ -40,10 +37,9 @@ namespace HistoricalReactiveCommand
                         observer.OnCompleted();
                         return new CompositeDisposable();
                     }),
-                canExecute ?? Observables.True,
-                outputScheduler ?? RxApp.MainThreadScheduler,
-                history ?? Locator.Current.GetService<IHistory>(),
-                commandKey);
+                canExecute,
+                outputScheduler,
+                history);
         }
         
         public static ReactiveCommandWithHistory<TParam, TResult> CreateWithHistoryFromObservable<TParam, TResult>(
@@ -57,14 +53,17 @@ namespace HistoricalReactiveCommand
             if (commandKey == null) throw new ArgumentNullException(nameof(commandKey));
             if (execute == null) throw new ArgumentNullException(nameof(execute));
             if (discard == null) throw new ArgumentNullException(nameof(discard));
-            
-            return new ReactiveCommandWithHistory<TParam, TResult>(
-                execute,
-                discard,
+
+            var command = new ReactiveCommandWithHistory<TParam, TResult>(
+                execute, discard,
                 canExecute ?? Observables.True,
                 outputScheduler ?? RxApp.MainThreadScheduler,
+                History.GetContext(history, outputScheduler),
                 history ?? Locator.Current.GetService<IHistory>(),
                 commandKey);
+            
+            Locator.CurrentMutable.RegisterConstant(command, typeof(IReactiveCommandWithHistory), commandKey);
+            return command;
         }
     }
     
@@ -81,16 +80,16 @@ namespace HistoricalReactiveCommand
             Func<TParam, TResult, IObservable<TResult>> discard,
             IObservable<bool> canExecute,
             IScheduler outputScheduler,
+            HistoryContext context,
             IHistory history,
             string commandKey)
         {
-            _history = history;
-            _commandKey = commandKey;
             _discard = ReactiveCommand.CreateFromObservable<HistoryEntry, TResult>(
                 entry => discard((TParam) entry.Parameter, (TResult) entry.Result), 
                 outputScheduler: outputScheduler);
 
-            var canActuallyExecute = history.CanRecord
+            var canActuallyExecute = context
+                .CanRecord
                 .CombineLatest(canExecute, (recordable, executable) => recordable && executable);
             
             _execute = ReactiveCommand.CreateFromObservable<HistoryEntry, TResult>(
@@ -98,10 +97,11 @@ namespace HistoricalReactiveCommand
                 canActuallyExecute,
                 outputScheduler);
 
+            _history = history;
+            _commandKey = commandKey;
             _canExecuteSubscription = canExecute.Subscribe(OnCanExecuteChanged);
             
-            History = new HistoryContext(history, outputScheduler);
-            Locator.CurrentMutable.RegisterConstant(this, typeof(IReactiveCommandWithHistory), commandKey);
+            History = context;
         }
         
         public HistoryContext History {get; }

@@ -1,14 +1,14 @@
-﻿using HistoricalReactiveCommand.Imports;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using HistoricalReactiveCommand.Imports;
 
-namespace HistoricalReactiveCommand.History
+namespace HistoricalReactiveCommand
 {
-    public class History : IHistory, IDisposable
+    public class DefaultHistory : IHistory, IDisposable
     {
         private Stack<HistoryEntry> StackRedo { get; } = new Stack<HistoryEntry>();
         private Stack<HistoryEntry> StackUndo { get; } = new Stack<HistoryEntry>();
@@ -18,6 +18,8 @@ namespace HistoricalReactiveCommand.History
         private readonly Subject<bool> _canRedo = new Subject<bool>();
         private readonly Subject<bool> _canClear = new Subject<bool>();
 
+        public string Name { get; } = Guid.NewGuid().ToString();
+        
         public IObservable<bool> CanUndo => _canUndo.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanRedo => _canRedo.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanRecord => _canRecord.AsObservable().DistinctUntilChanged();
