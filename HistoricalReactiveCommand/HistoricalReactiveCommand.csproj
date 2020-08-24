@@ -10,8 +10,4 @@
     <PackageReference Include="ReactiveUI" Version="11.5.26" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Helpers\Extensions\" />
-  </ItemGroup>
-
 </Project>
