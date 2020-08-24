@@ -7,13 +7,12 @@ namespace HistoricalReactiveCommand
     {
         IObservable<bool> CanUndo { get; }
         IObservable<bool> CanRedo { get; }
+        IObservable<bool> CanRecord { get; }
         IObservable<bool> CanClear { get; }
 
-        IObservable<Unit> Undo(ICommandExecutor executor);
-        IObservable<Unit> Redo(ICommandExecutor executor);
+        IObservable<HistoryEntry> Undo(Func<HistoryEntry, IObservable<HistoryEntry>> discard);
+        IObservable<HistoryEntry> Redo(Func<HistoryEntry, IObservable<HistoryEntry>> execute);
+        IObservable<HistoryEntry> Record(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute);
         IObservable<Unit> Clear();
-
-        void Snapshot(IHistoryEntry entry);
-       
     }
 }
