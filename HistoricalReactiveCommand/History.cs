@@ -8,7 +8,7 @@ using HistoricalReactiveCommand.Imports;
 
 namespace HistoricalReactiveCommand
 {
-    public class DefaultHistory : IHistory, IDisposable
+    public class History : IHistory, IDisposable
     {
         private Stack<HistoryEntry> StackRedo { get; } = new Stack<HistoryEntry>();
         private Stack<HistoryEntry> StackUndo { get; } = new Stack<HistoryEntry>();
@@ -18,8 +18,13 @@ namespace HistoricalReactiveCommand
         private readonly Subject<bool> _canRedo = new Subject<bool>();
         private readonly Subject<bool> _canClear = new Subject<bool>();
 
-        public string Name { get; } = Guid.NewGuid().ToString();
-        
+        public History(string id)
+        {
+            Id = id;
+        }
+
+        public string Id { get; }
+
         public IObservable<bool> CanUndo => _canUndo.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanRedo => _canRedo.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanRecord => _canRecord.AsObservable().DistinctUntilChanged();

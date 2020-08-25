@@ -8,6 +8,8 @@ using HistoricalReactiveCommand.Imports;
 using HistoricalReactiveCommand;
 using Xunit;
 using System.Threading;
+using DynamicData.Annotations;
+using System.ComponentModel;
 
 namespace HistoricalReactiveCommand.Tests
 {
@@ -16,13 +18,6 @@ namespace HistoricalReactiveCommand.Tests
         private const string CommandKey = "command-key";
         private readonly Subject<bool> _canExecuteSubject = new Subject<bool>();
         private readonly IScheduler _scheduler = Scheduler.Immediate;
-        public string historyKey;
-
-        public ReactiveCommandWithHistoryTest()
-        {
-            historyKey = Guid.NewGuid().ToString();
-            History.RegistryDefaultHistory(historyKey: historyKey, outputScheduler: _scheduler);
-        }
 
         [Fact]
         public void CanExecuteChangedIsAvailableViaICommand()
@@ -31,7 +26,7 @@ namespace HistoricalReactiveCommand.Tests
                 (parameter, result) => Observables.Unit,
                 (parameter, result) => Observables.Unit,
                 _canExecuteSubject,
-                _scheduler, historyKey);
+                _scheduler);
 
             List<bool> canExecuteChanged = new List<bool>();
             fixture.CanExecuteChanged += (s, e) => canExecuteChanged.Add(fixture.CanExecute(null));
@@ -47,25 +42,24 @@ namespace HistoricalReactiveCommand.Tests
         [Fact]
         public void ShouldManageCommandHistory()
         {
-            var fixture = ReactiveCommandEx.CreateWithHistory<int>(CommandKey,
-             (number) => number + 1,
-             (number) => number - 1,
-             Observables.True,
-             _scheduler, historyKey);
+            int myNumber = 0;
+            var command = ReactiveCommandEx.CreateWithHistory<int>("adding",
+             (number) => { myNumber += number; },
+             (number) => { myNumber -= number; },
+              Observables.True, _scheduler);
 
-            var latestProducedNumber = 0;
-            fixture.Subscribe(number => latestProducedNumber = number);
-            fixture.Execute().Subscribe();
-            Assert.Equal(1, latestProducedNumber);
-
-            fixture.History.Undo.Execute().Subscribe();
-            Assert.Equal(0, latestProducedNumber);
-
-            fixture.History.Redo.Execute().Subscribe();
-            Assert.Equal(1, latestProducedNumber);
-
-            fixture.History.Undo.Execute().Subscribe();
-            Assert.Equal(0, latestProducedNumber);
+            command.Execute(25).Subscribe();
+            Assert.Equal(25, myNumber);
+            command.Execute(25).Subscribe();
+            Assert.Equal(50, myNumber);
+            command.History.Undo.Execute().Subscribe();
+            Assert.Equal(25, myNumber);
+            command.History.Undo.Execute().Subscribe();
+            Assert.Equal(0, myNumber);
+            command.History.Redo.Execute().Subscribe();
+            Assert.Equal(25, myNumber);
+            command.History.Redo.Execute().Subscribe();
+            Assert.Equal(50, myNumber);
         }
     }
 }

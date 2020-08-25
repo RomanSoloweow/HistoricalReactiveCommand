@@ -8,69 +8,51 @@ using Splat;
 
 namespace HistoricalReactiveCommand
 {
-    public static class History
+    public sealed class HistoryContext : IDisposable
     {
-        public static void RegistryDefaultHistory(string historyKey="", IScheduler? outputScheduler = null)
-        {
-            RegistryHistory(new DefaultHistory(), historyKey, outputScheduler??RxApp.MainThreadScheduler);
-        }
-
-        public static void RegistryHistory(IHistory history, string historyKey, IScheduler? outputScheduler = null)
-        {
-            if (historyKey == null)
-            {
-                throw new ArgumentNullException(nameof(historyKey));
-            }
-
-            if (history == null)
-            {
-                throw new ArgumentNullException(nameof(history));
-            }
-
-            var existingContext = Locator.Current.GetService<HistoryContext>(historyKey);
-
-            if (existingContext != null)
-            {
-                throw new ArgumentException($"History {historyKey} already was registered.");
-            }
-
-            var context = new HistoryContext(history, outputScheduler ?? RxApp.MainThreadScheduler);
-            Locator.CurrentMutable.RegisterConstant(context, historyKey);
-        }
-
-        public static HistoryContext GetContext(string historyKey="")
-        {
-            return Locator.Current.GetService<HistoryContext>(historyKey);
-        }
-
-
-        public static HistoryContext GetContext(IHistory history, string historyKey, IScheduler? outputScheduler = null)
+        internal static HistoryContext GetContext(IHistory history, IScheduler? outputScheduler = null)
         {
             if (history == null)
             {
                 throw new ArgumentNullException(nameof(history));
             }
 
-            if (historyKey == null)
+            if (history.Id == null)
             {
-                throw new ArgumentNullException(nameof(historyKey));
+                throw new ArgumentNullException(nameof(history.Id));
             }
 
-            var context = GetContext(historyKey);
+            var context = Locator.Current.GetService<HistoryContext>(history.Id);
 
-            if(context!=null)
+            if (context != null)
             {
                 return context;
             }
 
-            RegistryHistory(history, historyKey, outputScheduler);
-
-            return GetContext(historyKey);
+            context = new HistoryContext(history, outputScheduler ?? RxApp.MainThreadScheduler);
+            Locator.CurrentMutable.RegisterConstant(context, history.Id);
+            return context;
         }
-    }
-    
-    public sealed class HistoryContext : IDisposable
-    {
+
+        internal static HistoryContext GetContext(string historyId = "", IScheduler? outputScheduler = null)
+        {
+            if (historyId == null)
+            {
+                throw new ArgumentNullException(nameof(historyId));
+            }
+
+            var context = Locator.Current.GetService<HistoryContext>(historyId);
+
+            if (context != null)
+            {
+                return context;
+            }
+
+            context = new HistoryContext(new History(historyId), outputScheduler ?? RxApp.MainThreadScheduler);
+            Locator.CurrentMutable.RegisterConstant(context, historyId);
+            return context;
+        }
+
         private readonly IHistory _history;
         internal HistoryContext(IHistory history, IScheduler outputScheduler)
         {

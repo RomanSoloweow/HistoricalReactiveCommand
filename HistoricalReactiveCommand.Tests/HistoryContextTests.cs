@@ -12,25 +12,22 @@ namespace HistoricalReactiveCommand.Tests
         private readonly IScheduler _scheduler = Scheduler.Immediate;
 
         [Fact]
-        public void ShouldUseDefaultHistoryFromLocator()
-        {
-            string historyKey = Guid.NewGuid().ToString();
-            History.RegistryHistory(new DefaultHistory(), historyKey, _scheduler);
-            var context = History.GetContext(historyKey);
-            
-            Assert.NotNull(context);
-        }
-
-        [Fact]
         public void ShouldResolveDifferentContextsForDifferentHistories()
         {
             string historyKey = Guid.NewGuid().ToString();
-            History.RegistryHistory(new DefaultHistory(), historyKey,  _scheduler);
-            var context = History.GetContext(historyKey);
+            var createdContext = new HistoryContext(new History(historyKey), _scheduler);
+            Locator.CurrentMutable.RegisterConstant(createdContext, historyKey);
+            var context = HistoryContext.GetContext(historyKey);
+
+            Assert.Equal(createdContext, context);
 
             historyKey = Guid.NewGuid().ToString();
-            History.RegistryHistory(new DefaultHistory(), historyKey, _scheduler);
-            var nextContext = History.GetContext(historyKey);
+
+            createdContext = new HistoryContext(new History(historyKey), _scheduler);
+            Locator.CurrentMutable.RegisterConstant(createdContext, historyKey);
+            var nextContext = HistoryContext.GetContext(historyKey);
+
+            Assert.Equal(createdContext, nextContext);
 
             Assert.NotNull(context);
             Assert.NotNull(nextContext);
@@ -43,21 +40,22 @@ namespace HistoricalReactiveCommand.Tests
             string historyKey = Guid.NewGuid().ToString();
             var canUndo = false;
             var canRedo = false;
-            var history = new DefaultHistory();
+            var history = new History(historyKey);
 
-            History.RegistryHistory(history, historyKey, _scheduler);
-            var context = History.GetContext(historyKey);
+
+            Locator.CurrentMutable.RegisterConstant(new HistoryContext(history, _scheduler), historyKey);
+            var context = HistoryContext.GetContext(historyKey);
             context.Undo.CanExecute.Subscribe(can => canUndo = can);
             context.Redo.CanExecute.Subscribe(can => canRedo = can);
-            
+
             Assert.False(canUndo);
             Assert.False(canRedo);
-            
+
             history.Record(
-                    new HistoryEntry(Unit.Default, 42, "awesome"), 
+                    new HistoryEntry(Unit.Default, 42, "awesome"),
                     entry => Observable.Return(new HistoryEntry(entry.Parameter, entry.Result, entry.CommandKey)))
                 .Subscribe();
-            
+
             Assert.True(canUndo);
             Assert.False(canRedo);
         }

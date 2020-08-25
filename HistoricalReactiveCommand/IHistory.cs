@@ -5,6 +5,7 @@ namespace HistoricalReactiveCommand
 {
     public interface IHistory
     {
+        string Id { get; }
         IObservable<bool> CanUndo { get; }
         IObservable<bool> CanRedo { get; }
         IObservable<bool> CanRecord { get; }
