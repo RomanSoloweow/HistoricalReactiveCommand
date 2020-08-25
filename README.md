@@ -5,7 +5,11 @@ HistoricalReactiveCommand for [ReactiveUI](https://github.com/reactiveui/Reactiv
 The creation and logic of work is as similar as possible to conventional [reactive commands](https://www.reactiveui.net/docs/handbook/commands/).
 
 # A Compelling Example
+## Simple command with History
  ```C#
+    //Registry default history. You can set your IScheduler here
+    History.RegistryDefaultHistory();
+    
     int myNumber = 0;
     var command = ReactiveCommandEx.CreateWithHistory<int>("adding",
      (number) => { myNumber += number; },
@@ -25,6 +29,7 @@ The creation and logic of work is as similar as possible to conventional [reacti
     command.History.Redo.Execute().Subscribe();
                        
  ```
+ 
  
 
 
