@@ -5,6 +5,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
 using System.Windows.Input;
 using HistoricalReactiveCommand.Imports;
+using HistoricalReactiveCommand;
 using Xunit;
 
 namespace HistoricalReactiveCommand.Tests
@@ -14,8 +15,14 @@ namespace HistoricalReactiveCommand.Tests
         private const string CommandKey = "command-key";
         private readonly Subject<bool> _canExecuteSubject = new Subject<bool>();
         private readonly IScheduler _scheduler = Scheduler.Immediate;
-        private readonly IHistory _history = new DefaultHistory();
-       
+        public string historyKey;
+
+        public ReactiveCommandWithHistoryTest()
+        {
+            historyKey = Guid.NewGuid().ToString();
+            History.RegistryDefaultHistory(historyKey: historyKey, outputScheduler: _scheduler);
+        }
+
         [Fact]
         public void CanExecuteChangedIsAvailableViaICommand()
         {
@@ -23,8 +30,7 @@ namespace HistoricalReactiveCommand.Tests
                 (parameter, result) => Observables.Unit,
                 (parameter, result) => Observables.Unit,
                 _canExecuteSubject,
-                _scheduler,
-                _history);
+                _scheduler, historyKey);
 
             List<bool> canExecuteChanged = new List<bool>();
             fixture.CanExecuteChanged += (s, e) => canExecuteChanged.Add(fixture.CanExecute(null));
@@ -44,8 +50,7 @@ namespace HistoricalReactiveCommand.Tests
                 (parameter, number) => number + 1,
                 (parameter, number) => number - 1,
                 Observables.True,
-                _scheduler,
-                _history);
+                _scheduler, historyKey);
 
             var latestProducedNumber = 0;
             fixture.Subscribe(number => latestProducedNumber = number);
@@ -57,7 +62,7 @@ namespace HistoricalReactiveCommand.Tests
 
             fixture.History.Redo.Execute().Subscribe();
             Assert.Equal(1, latestProducedNumber);
-            
+
             fixture.History.Undo.Execute().Subscribe();
             Assert.Equal(0, latestProducedNumber);
         }

@@ -9,9 +9,9 @@
             CommandKey = commandKey;
         }
         
-        public object Parameter { get; }
-        public object Result { get; }
-        public string CommandKey { get; }
+        public object Parameter { get; set; }
+        public object Result { get; set; }
+        public string CommandKey { get; set; }
     }
 }
 

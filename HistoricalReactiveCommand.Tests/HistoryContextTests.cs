@@ -10,46 +10,43 @@ namespace HistoricalReactiveCommand.Tests
     public class HistoryContextTests
     {
         private readonly IScheduler _scheduler = Scheduler.Immediate;
-        
+
         [Fact]
-        public void ShouldResolveSameContextForSameHistory()
+        public void ShouldUseDefaultHistoryFromLocator()
         {
-            var history = new DefaultHistory();
-            var context = History.GetContext(history, _scheduler);
-            var nextContext = History.GetContext(history, _scheduler);
+            string historyKey = Guid.NewGuid().ToString();
+            History.RegistryHistory(new DefaultHistory(), historyKey, _scheduler);
+            var context = History.GetContext(historyKey);
             
             Assert.NotNull(context);
-            Assert.NotNull(nextContext);
-            Assert.Equal(context, nextContext);
         }
 
         [Fact]
         public void ShouldResolveDifferentContextsForDifferentHistories()
         {
-            var context = History.GetContext(new DefaultHistory(), _scheduler);
-            var nextContext = History.GetContext(new DefaultHistory(), _scheduler);
-            
+            string historyKey = Guid.NewGuid().ToString();
+            History.RegistryHistory(new DefaultHistory(), historyKey,  _scheduler);
+            var context = History.GetContext(historyKey);
+
+            historyKey = Guid.NewGuid().ToString();
+            History.RegistryHistory(new DefaultHistory(), historyKey, _scheduler);
+            var nextContext = History.GetContext(historyKey);
+
             Assert.NotNull(context);
             Assert.NotNull(nextContext);
             Assert.NotEqual(context, nextContext);
         }
 
         [Fact]
-        public void ShouldUseDefaultHistoryFromLocator()
-        {
-            Locator.CurrentMutable.RegisterConstant(new DefaultHistory(), typeof(IHistory));
-            var context = History.GetContext();
-            Assert.NotNull(context);
-        }
-
-        [Fact]
         public void CanUndoShouldRespectHistoryState()
         {
+            string historyKey = Guid.NewGuid().ToString();
             var canUndo = false;
             var canRedo = false;
             var history = new DefaultHistory();
-            
-            var context = History.GetContext(history, _scheduler);
+
+            History.RegistryHistory(history, historyKey, _scheduler);
+            var context = History.GetContext(historyKey);
             context.Undo.CanExecute.Subscribe(can => canUndo = can);
             context.Redo.CanExecute.Subscribe(can => canRedo = can);
             
