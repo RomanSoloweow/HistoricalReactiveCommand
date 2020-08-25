@@ -22,6 +22,11 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(historyKey));
             }
 
+            if (history == null)
+            {
+                throw new ArgumentNullException(nameof(history));
+            }
+
             var existingContext = Locator.Current.GetService<HistoryContext>(historyKey);
 
             if (existingContext != null)
@@ -35,9 +40,32 @@ namespace HistoricalReactiveCommand
 
         public static HistoryContext GetContext(string historyKey="")
         {
-            var existingContext = Locator.Current.GetService<HistoryContext>(historyKey);
+            return Locator.Current.GetService<HistoryContext>(historyKey);
+        }
 
-            return existingContext;
+
+        public static HistoryContext GetContext(IHistory history, string historyKey, IScheduler? outputScheduler = null)
+        {
+            if (history == null)
+            {
+                throw new ArgumentNullException(nameof(history));
+            }
+
+            if (historyKey == null)
+            {
+                throw new ArgumentNullException(nameof(historyKey));
+            }
+
+            var context = GetContext(historyKey);
+
+            if(context!=null)
+            {
+                return context;
+            }
+
+            RegistryHistory(history, historyKey, outputScheduler);
+
+            return GetContext(historyKey);
         }
     }
     

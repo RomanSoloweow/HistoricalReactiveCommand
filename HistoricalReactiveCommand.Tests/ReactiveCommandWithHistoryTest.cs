@@ -7,6 +7,7 @@ using System.Windows.Input;
 using HistoricalReactiveCommand.Imports;
 using HistoricalReactiveCommand;
 using Xunit;
+using System.Threading;
 
 namespace HistoricalReactiveCommand.Tests
 {
@@ -46,11 +47,11 @@ namespace HistoricalReactiveCommand.Tests
         [Fact]
         public void ShouldManageCommandHistory()
         {
-            var fixture = ReactiveCommandEx.CreateWithHistory<Unit, int>(CommandKey,
-                (parameter, number) => number + 1,
-                (parameter, number) => number - 1,
-                Observables.True,
-                _scheduler, historyKey);
+            var fixture = ReactiveCommandEx.CreateWithHistory<int>(CommandKey,
+             (number) => number + 1,
+             (number) => number - 1,
+             Observables.True,
+             _scheduler, historyKey);
 
             var latestProducedNumber = 0;
             fixture.Subscribe(number => latestProducedNumber = number);
