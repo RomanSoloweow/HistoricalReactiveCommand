@@ -7,9 +7,6 @@ The creation and logic of work is as similar as possible to conventional [reacti
 # A Compelling Example
 ## Simple command with History
  ```C#
-    //Registry default history. You can set your IScheduler here
-    History.RegistryDefaultHistory();
-    
     int myNumber = 0;
     var command = ReactiveCommandEx.CreateWithHistory<int>("adding",
      (number) => { myNumber += number; },
