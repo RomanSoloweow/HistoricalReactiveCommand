@@ -10,22 +10,12 @@ using HistoricalReactiveCommand.Sandbox.Helpers.Extensions;
 
 namespace HistoricalReactiveCommand.Sandbox.Views
 {
-    public class MainWindow : ReactiveWindow<MainWindowViewModel>
+    public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
     {
-        Button ButtonForTest;
         public MainWindow()
         {
             InitializeComponent();
             SetupBinding();
-#if DEBUG
-            this.AttachDevTools();
-#endif
-        }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-            ButtonForTest = this.FindControl<Button>("ButtonForTest");
         }
 
         private void SetupBinding()

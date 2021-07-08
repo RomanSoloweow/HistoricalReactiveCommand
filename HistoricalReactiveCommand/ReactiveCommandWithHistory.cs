@@ -813,7 +813,12 @@ namespace HistoricalReactiveCommand
                 .Record(historyEntry, entry => withHistory.Execute(entry))
                 .Select(entry => (TResult) entry.Result);
         }
-        
+
+        public override IObservable<TResult> Execute()
+        {
+            return Execute(default!);
+        }
+
         protected override void Dispose(bool disposing)
         {
             _canExecuteSubscription.Dispose();

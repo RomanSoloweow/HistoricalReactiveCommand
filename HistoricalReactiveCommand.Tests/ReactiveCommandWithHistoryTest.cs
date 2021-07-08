@@ -8,7 +8,6 @@ using HistoricalReactiveCommand.Imports;
 using HistoricalReactiveCommand;
 using Xunit;
 using System.Threading;
-using DynamicData.Annotations;
 using System.ComponentModel;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
