@@ -107,7 +107,7 @@ namespace HistoricalReactiveCommand
                 canExecute, outputScheduler, historyId);
         }
 
-        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistoryFromTask<TResult>(
+        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistoryFromTask(
             string commandKey,
             Func<Task> execute,
             Func<Task> discard,
@@ -130,7 +130,7 @@ namespace HistoricalReactiveCommand
                     canExecute, outputScheduler, historyId);
         }
 
-        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistoryFromTask<TResult>(
+        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistoryFromTask(
             string commandKey,
             Func<CancellationToken, Task> execute,
             Func<CancellationToken, Task> discard,
@@ -221,7 +221,7 @@ namespace HistoricalReactiveCommand
 
         }
 
-        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistory<TResult>(
+        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistory(
             string commandKey,
             Action execute,
             Action discard,
@@ -432,7 +432,7 @@ namespace HistoricalReactiveCommand
                 history, canExecute, outputScheduler);
         }
 
-        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistoryFromTask<TResult>(
+        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistoryFromTask(
             string commandKey,
             Func<Task> execute,
             Func<Task> discard,
@@ -459,7 +459,7 @@ namespace HistoricalReactiveCommand
                     history, canExecute, outputScheduler);
         }
 
-        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistoryFromTask<TResult>(
+        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistoryFromTask(
             string commandKey,
             Func<CancellationToken, Task> execute,
             Func<CancellationToken, Task> discard,
@@ -568,7 +568,7 @@ namespace HistoricalReactiveCommand
 
         }
 
-        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistory<TResult>(
+        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistory(
             string commandKey,
             Action execute,
             Action discard,
