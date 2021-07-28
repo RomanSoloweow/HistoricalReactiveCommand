@@ -103,7 +103,7 @@ namespace HistoricalReactiveCommand
             var command = Locator.Current.GetService<IReactiveCommandWithHistory>(entry.CommandKey);
 
             if (command == null)
-                throw new KeyNotFoundException($"Command with {entry.CommandKey} wasn't registered.");
+                throw new KeyNotFoundException($"Command with key '{entry.CommandKey}' wasn't registered.");
 
             return command;
         }

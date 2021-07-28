@@ -768,6 +768,10 @@ namespace HistoricalReactiveCommand
             if (context == null)         throw new ArgumentNullException(nameof(context));
             if (commandKey == null)      throw new ArgumentNullException(nameof(commandKey));
 
+            var command = Locator.Current.GetService<IReactiveCommandWithHistory>(commandKey);
+            if(command != null)    
+                throw new ArgumentException($"Command with key '{commandKey}' already was registered.");
+            
             History = context;
 
             _discard = ReactiveCommand.CreateFromObservable<HistoryEntry, TResult>(
@@ -788,7 +792,7 @@ namespace HistoricalReactiveCommand
             _canExecuteSubscription = canExecute.Subscribe(OnCanExecuteChanged);
             
       
-
+            
             Locator.CurrentMutable.RegisterConstant<IReactiveCommandWithHistory>(this, commandKey);
         }
         
