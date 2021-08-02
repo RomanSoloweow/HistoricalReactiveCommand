@@ -744,6 +744,8 @@ namespace HistoricalReactiveCommand
         // private readonly ReactiveCommand<TParam, TResult> _execute;
         
         private readonly ReactiveCommand<TParam, TResult> _execute;
+        private CompositeDisposable _disposable = new CompositeDisposable();
+        private TParam _param;
         // private Func<TParam, TResult, IObservable<TResult>> _execute;
         // private Func<TParam, TResult, IObservable<TResult>> _discard;
         private readonly IDisposable _canExecuteSubscription;
@@ -768,22 +770,22 @@ namespace HistoricalReactiveCommand
                 .CombineLatest(canExecute, (recordable, executable) => recordable && executable);
             
             _execute = ReactiveCommand.CreateFromObservable<TParam, TResult>(
-                param =>
-                {
-                    var result = execute.Invoke(param, default(TResult));
-       
-                    //TODO 
-                    result.Subscribe(result =>
-                    {
-                        context.Snapshot(
-                            () => { discard.Invoke(param, result); },
-                            () => { execute.Invoke(param, result); });
-                    });
-                    
-                    return result;
-                },
+                param => execute?.Invoke(param, default(TResult)),
                 canActuallyExecute,
                 outputScheduler);
+            
+            _execute.Subscribe(result =>
+            {
+                context.Snapshot(
+                    () =>
+                    {
+                        discard.Invoke(_param, result).Subscribe().DisposeWith(_disposable);
+                    },
+                    () =>
+                    {
+                        execute.Invoke(_param, result).Subscribe().DisposeWith(_disposable);
+                    });
+            });
             
             History = context;
             _canExecuteSubscription = canExecute.Subscribe(OnCanExecuteChanged);
@@ -804,6 +806,7 @@ namespace HistoricalReactiveCommand
 
         public override IObservable<TResult> Execute(TParam parameter = default)
         {
+            _param = parameter;
             return _execute.Execute(parameter);
         }
 
@@ -814,8 +817,10 @@ namespace HistoricalReactiveCommand
 
         protected override void Dispose(bool disposing)
         {
+            _disposable.Dispose();
             _canExecuteSubscription.Dispose();
             _execute.Dispose();
+   
         }
 
     }

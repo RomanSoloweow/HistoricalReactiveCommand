@@ -61,7 +61,7 @@ namespace HistoricalReactiveCommand
             var CanUndo = CanRecord
                 .CombineLatest(history.CanUndo, (recordable, executable) => recordable && executable);
 
-            Undo = ReactiveCommand.Create(history.Undo, CanUndo, outputScheduler);
+            Undo = ReactiveCommand.Create(history.Undo,  outputScheduler:outputScheduler);
 
             var CanRedo = CanRecord
                 .CombineLatest(history.CanRedo, (recordable, executable) => recordable && executable);

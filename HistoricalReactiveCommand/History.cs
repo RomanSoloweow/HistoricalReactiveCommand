@@ -36,7 +36,7 @@ namespace HistoricalReactiveCommand
             
             UpdateSubjects(true);
             var entry = StackUndo.Pop();
-            entry.Redo.Invoke();
+            entry.Undo.Invoke();
             StackRedo.Push(entry);
             UpdateSubjects();
         }
