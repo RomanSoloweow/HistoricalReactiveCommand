@@ -29,51 +29,81 @@ namespace HistoricalReactiveCommand
         public IObservable<bool> CanRedo => _canRedo.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanRecord => _canRecord.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanClear => _canClear.AsObservable().DistinctUntilChanged();
-
-        public IObservable<HistoryEntry> Undo(Func<HistoryEntry, IObservable<HistoryEntry>> discard)
+        public void Undo()
         {
             if (StackUndo.Count == 0)
                 throw new Exception();
             
             UpdateSubjects(true);
-            return discard(StackUndo.Pop()).Do(entry =>
-            {
-                StackRedo.Push(entry);
-                UpdateSubjects();
-            });
+            var entry = StackUndo.Pop();
+            entry.Redo.Invoke();
+            StackRedo.Push(entry);
+            UpdateSubjects();
         }
 
-        public IObservable<HistoryEntry> Redo(Func<HistoryEntry, IObservable<HistoryEntry>> execute)
+        public void Redo()
         {
             if (StackRedo.Count == 0)
                 throw new Exception();
             
             UpdateSubjects(true);
-            return execute(StackRedo.Pop()).Do(entry =>
-            {
-                StackUndo.Push(entry);
-                UpdateSubjects();
-            });
+            var entry = StackRedo.Pop();
+            entry.Redo.Invoke();
+            StackUndo.Push(entry);
+            UpdateSubjects();
         }
-        
-        public IObservable<HistoryEntry> Snapshot(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute)
+
+        public void Snapshot(Action undo, Action redo)
         {
             StackRedo.Clear();
             UpdateSubjects(true);
-            return execute(entry).Do(updatedEntry =>
-            {
-                StackUndo.Push(updatedEntry);
-                UpdateSubjects();
-            });
+            StackUndo.Push(new HistoryEntry(undo, redo));
+            UpdateSubjects();
         }
 
-        public IObservable<Unit> Clear()
+        // public IObservable<HistoryEntry> Undo(Func<HistoryEntry, IObservable<HistoryEntry>> discard)
+        // {
+        //     if (StackUndo.Count == 0)
+        //         throw new Exception();
+        //     
+        //     UpdateSubjects(true);
+        //     return discard(StackUndo.Pop()).Do(entry =>
+        //     {
+        //         StackRedo.Push(entry);
+        //         UpdateSubjects();
+        //     });
+        // }
+        //
+        // public IObservable<HistoryEntry> Redo(Func<HistoryEntry, IObservable<HistoryEntry>> execute)
+        // {
+        //     if (StackRedo.Count == 0)
+        //         throw new Exception();
+        //     
+        //     UpdateSubjects(true);
+        //     return execute(StackRedo.Pop()).Do(entry =>
+        //     {
+        //         StackUndo.Push(entry);
+        //         UpdateSubjects();
+        //     });
+        // }
+        //
+        // public IObservable<HistoryEntry> Snapshot(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute)
+        // {
+        //     StackRedo.Clear();
+        //     UpdateSubjects(true);
+        //     return execute(entry).Do(updatedEntry =>
+        //     {
+        //         StackUndo.Push(updatedEntry);
+        //         UpdateSubjects();
+        //     });
+        // }
+
+        public void Clear()
         {
             UpdateSubjects(true);
             StackRedo.Clear();
             StackUndo.Clear();
             UpdateSubjects();
-            return Observables.Unit;
         }
 
         public void Dispose()

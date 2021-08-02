@@ -61,30 +61,21 @@ namespace HistoricalReactiveCommand
             var CanUndo = CanRecord
                 .CombineLatest(history.CanUndo, (recordable, executable) => recordable && executable);
 
-            Undo = ReactiveCommand.CreateFromObservable<Unit, HistoryEntry>(
-                unit => history.Undo(entry => entry.Undo(entry)),
-                CanUndo, 
-                outputScheduler);
+            Undo = ReactiveCommand.Create(history.Undo, CanUndo, outputScheduler);
 
             var CanRedo = CanRecord
                 .CombineLatest(history.CanRedo, (recordable, executable) => recordable && executable);
 
-            Redo = ReactiveCommand.CreateFromObservable<Unit, HistoryEntry>(
-                unit => history.Redo(entry => entry.Redo(entry)),
-                CanRedo,
-                outputScheduler);
+            Redo = ReactiveCommand.Create(history.Redo, CanRedo, outputScheduler);
             
-            Clear = ReactiveCommand.CreateFromObservable(
-                history.Clear, 
-                history.CanClear, 
-                outputScheduler);
+            Clear = ReactiveCommand.Create(history.Clear, history.CanClear, outputScheduler);
         }
 
         public IObservable<bool> CanRecord => _history.CanRecord;
 
-        public ReactiveCommand<Unit, HistoryEntry> Undo { get; }
+        public ReactiveCommand<Unit, Unit> Undo { get; }
         
-        public ReactiveCommand<Unit, HistoryEntry> Redo { get; }
+        public ReactiveCommand<Unit, Unit> Redo { get; }
         
         public ReactiveCommand<Unit, Unit> Clear { get; }
 
@@ -94,7 +85,9 @@ namespace HistoricalReactiveCommand
             Redo.Dispose();
             Clear.Dispose();
         }
-        
-        internal IObservable<HistoryEntry> Snapshot(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute) => _history.Snapshot(entry, execute);
+
+        internal void Snapshot(Action undo, Action redo) => _history.Snapshot(undo, redo);
+
+        // internal IObservable<HistoryEntry> Snapshot(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute) => _history.Snapshot(entry, execute);
     }
 }

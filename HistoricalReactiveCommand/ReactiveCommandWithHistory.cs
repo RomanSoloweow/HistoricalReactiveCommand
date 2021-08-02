@@ -738,10 +738,14 @@ namespace HistoricalReactiveCommand
         }
     }
     
-    public sealed class ReactiveCommandWithHistory<TParam, TResult> : ReactiveCommandBase<TParam, TResult>, IReactiveCommandWithHistory
+    public sealed class ReactiveCommandWithHistory<TParam, TResult> : ReactiveCommandBase<TParam, TResult>
     {
-        private readonly ReactiveCommand<HistoryEntry, TResult> _discard;
-        private readonly ReactiveCommand<HistoryEntry, TResult> _execute;
+        // private readonly ReactiveCommand<HistoryEntry, TResult> _discard;
+        // private readonly ReactiveCommand<TParam, TResult> _execute;
+        
+        private readonly ReactiveCommand<TParam, TResult> _execute;
+        // private Func<TParam, TResult, IObservable<TResult>> _execute;
+        // private Func<TParam, TResult, IObservable<TResult>> _discard;
         private readonly IDisposable _canExecuteSubscription;
         internal ReactiveCommandWithHistory(
             Func<TParam, TResult, IObservable<TResult>> execute,
@@ -758,20 +762,29 @@ namespace HistoricalReactiveCommand
             if (context == null)         throw new ArgumentNullException(nameof(context));
             
             History = context;
-
-            _discard = ReactiveCommand.CreateFromObservable<HistoryEntry, TResult>(
-                entry => discard((TParam) entry.Parameter, (TResult) entry.Result), 
-                outputScheduler: outputScheduler);
-
+            
             var canActuallyExecute = context
                 .CanRecord
                 .CombineLatest(canExecute, (recordable, executable) => recordable && executable);
             
-            _execute = ReactiveCommand.CreateFromObservable<HistoryEntry, TResult>(
-                entry => execute((TParam) entry.Parameter, (TResult) entry.Result),
+            _execute = ReactiveCommand.CreateFromObservable<TParam, TResult>(
+                param =>
+                {
+                    var result = execute.Invoke(param, default(TResult));
+       
+                    //TODO 
+                    result.Subscribe(result =>
+                    {
+                        context.Snapshot(
+                            () => { discard.Invoke(param, result); },
+                            () => { execute.Invoke(param, result); });
+                    });
+                    
+                    return result;
+                },
                 canActuallyExecute,
                 outputScheduler);
-
+            
             History = context;
             _canExecuteSubscription = canExecute.Subscribe(OnCanExecuteChanged);
         }
@@ -786,16 +799,12 @@ namespace HistoricalReactiveCommand
 
         public override IDisposable Subscribe(IObserver<TResult> observer)
         {
-            return new CompositeDisposable(_execute.Subscribe(observer), _discard.Subscribe(observer));
+            return _execute.Subscribe(observer);
         }
 
         public override IObservable<TResult> Execute(TParam parameter = default)
         {
-            var withHistory = this as IReactiveCommandWithHistory;
-            var historyEntry = new HistoryEntry(parameter, default(TResult), withHistory.Discard, withHistory.Execute);
-            return History
-                .Snapshot(historyEntry, entry => withHistory.Execute(entry))
-                .Select(entry => (TResult) entry.Result);
+            return _execute.Execute(parameter);
         }
 
         public override IObservable<TResult> Execute()
@@ -806,18 +815,8 @@ namespace HistoricalReactiveCommand
         protected override void Dispose(bool disposing)
         {
             _canExecuteSubscription.Dispose();
-            _discard.Dispose();
             _execute.Dispose();
         }
 
-        IObservable<HistoryEntry> IReactiveCommandWithHistory.Execute(HistoryEntry entry)
-        {   
-            return _execute.Execute(entry).Select(result => { entry.Result = result; return entry; });
-        }
-
-        IObservable<HistoryEntry> IReactiveCommandWithHistory.Discard(HistoryEntry entry)
-        {
-            return _discard.Execute(entry).Select(result => { entry.Result = result; return entry; });
-        }
     }
 }
