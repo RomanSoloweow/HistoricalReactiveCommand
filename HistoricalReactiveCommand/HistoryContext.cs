@@ -58,15 +58,15 @@ namespace HistoricalReactiveCommand
         {
             _history = history;
 
-            var CanUndo = CanRecord
+            var canUndo = CanRecord
                 .CombineLatest(history.CanUndo, (recordable, executable) => recordable && executable);
 
-            Undo = ReactiveCommand.Create(history.Undo,  outputScheduler:outputScheduler);
+            Undo = ReactiveCommand.Create(history.Undo,  canUndo, outputScheduler);
 
-            var CanRedo = CanRecord
+            var canRedo = CanRecord
                 .CombineLatest(history.CanRedo, (recordable, executable) => recordable && executable);
 
-            Redo = ReactiveCommand.Create(history.Redo, CanRedo, outputScheduler);
+            Redo = ReactiveCommand.Create(history.Redo, canRedo, outputScheduler);
             
             Clear = ReactiveCommand.Create(history.Clear, history.CanClear, outputScheduler);
         }
