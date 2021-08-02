@@ -59,6 +59,7 @@ namespace HistoricalReactiveCommand
         public IObservable<HistoryEntry> Record(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute)
         {
             StackRedo.Clear();
+            UpdateSubjects(true);
             return execute(entry).Do(updatedEntry =>
             {
                 StackUndo.Push(updatedEntry);
@@ -68,6 +69,7 @@ namespace HistoricalReactiveCommand
 
         public IObservable<Unit> Clear()
         {
+            UpdateSubjects(true);
             StackRedo.Clear();
             StackUndo.Clear();
             UpdateSubjects();
