@@ -55,8 +55,8 @@ namespace HistoricalReactiveCommand
                 UpdateSubjects();
             });
         }
-
-        public IObservable<HistoryEntry> Record(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute)
+        
+        public IObservable<HistoryEntry> Snapshot(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute)
         {
             StackRedo.Clear();
             UpdateSubjects(true);

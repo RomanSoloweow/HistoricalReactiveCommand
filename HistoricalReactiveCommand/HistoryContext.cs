@@ -62,7 +62,7 @@ namespace HistoricalReactiveCommand
                 .CombineLatest(history.CanUndo, (recordable, executable) => recordable && executable);
 
             Undo = ReactiveCommand.CreateFromObservable<Unit, HistoryEntry>(
-                unit => history.Undo(entry => ResolveCommand(entry).Discard(entry)),
+                unit => history.Undo(entry => entry.Undo(entry)),
                 CanUndo, 
                 outputScheduler);
 
@@ -70,7 +70,7 @@ namespace HistoricalReactiveCommand
                 .CombineLatest(history.CanRedo, (recordable, executable) => recordable && executable);
 
             Redo = ReactiveCommand.CreateFromObservable<Unit, HistoryEntry>(
-                unit => history.Redo(entry => ResolveCommand(entry).Execute(entry)),
+                unit => history.Redo(entry => entry.Redo(entry)),
                 CanRedo,
                 outputScheduler);
             
@@ -94,20 +94,7 @@ namespace HistoricalReactiveCommand
             Redo.Dispose();
             Clear.Dispose();
         }
-
-        private static IReactiveCommandWithHistory ResolveCommand(HistoryEntry entry)
-        {
-            if (string.IsNullOrWhiteSpace(entry.CommandKey))
-                throw new ArgumentException("Command key is null.", nameof(entry));
-            
-            var command = Locator.Current.GetService<IReactiveCommandWithHistory>(entry.CommandKey);
-
-            if (command == null)
-                throw new KeyNotFoundException($"Command with key '{entry.CommandKey}' wasn't registered.");
-
-            return command;
-        }
-
-        internal IObservable<HistoryEntry> Record(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute) => _history.Record(entry, execute);
+        
+        internal IObservable<HistoryEntry> Snapshot(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute) => _history.Snapshot(entry, execute);
     }
 }
