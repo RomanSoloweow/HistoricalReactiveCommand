@@ -1,8 +1,4 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-using Avalonia.ReactiveUI;
-using HistoricalReactiveCommand.Sandbox.Helpers;
+﻿using Avalonia.ReactiveUI;
 using HistoricalReactiveCommand.Sandbox.ViewModels;
 using ReactiveUI;
 using System.Reactive.Disposables;

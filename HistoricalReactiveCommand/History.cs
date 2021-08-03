@@ -1,22 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using HistoricalReactiveCommand.Imports;
 
 namespace HistoricalReactiveCommand
 {
-    public class History : IHistory
+    public class History: IHistory
     {
-        private Stack<HistoryEntry> StackRedo { get; } = new Stack<HistoryEntry>();
-        private Stack<HistoryEntry> StackUndo { get; } = new Stack<HistoryEntry>();
+        private Stack<IHistoryEntry> StackRedo { get; } = new();
+        private Stack<IHistoryEntry> StackUndo { get; } = new();
         
-        private readonly Subject<bool> _canRecord = new Subject<bool>();
-        private readonly Subject<bool> _canUndo = new Subject<bool>();
-        private readonly Subject<bool> _canRedo = new Subject<bool>();
-        private readonly Subject<bool> _canClear = new Subject<bool>();
+        private readonly Subject<bool> _canRecord = new();
+        private readonly Subject<bool> _canUndo = new();
+        private readonly Subject<bool> _canRedo = new();
+        private readonly Subject<bool> _canClear = new();
 
         public History(string id)
         {
@@ -27,7 +25,7 @@ namespace HistoricalReactiveCommand
 
         public IObservable<bool> CanUndo => _canUndo.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanRedo => _canRedo.AsObservable().DistinctUntilChanged();
-        public IObservable<bool> CanRecord => _canRecord.AsObservable().DistinctUntilChanged();
+        public IObservable<bool> CanSnapshot => _canRecord.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanClear => _canClear.AsObservable().DistinctUntilChanged();
         public void Undo()
         {
@@ -53,14 +51,13 @@ namespace HistoricalReactiveCommand
             UpdateSubjects();
         }
 
-        public void Snapshot(Action undo, Action redo)
+        public void Snapshot(IHistoryEntry entry)
         {
             StackRedo.Clear();
             UpdateSubjects(true);
-            StackUndo.Push(new HistoryEntry(undo, redo));
+            StackUndo.Push(entry);
             UpdateSubjects();
         }
-        
 
         public void Clear()
         {

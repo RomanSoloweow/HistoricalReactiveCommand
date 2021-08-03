@@ -2,17 +2,17 @@
 
 namespace HistoricalReactiveCommand
 {
-   public delegate IObservable<HistoryEntry> HistoryActionDelegate(HistoryEntry entry);
-    public class HistoryEntry
+   
+    public class HistoryEntry:IHistoryEntry
     {
-        public HistoryEntry(Action undo, Action redo)
+        public HistoryEntry(Action<HistoryEntry> undo, Action<HistoryEntry> redo)
         {
-            Undo = undo;
-            Redo = redo;
+            Undo = () => undo(this);
+            Redo = () => redo(this);
         }
         
-        public Action Undo { get; set; }
-        public Action Redo { get; set; }
+        public Action Undo { get; }
+        public Action Redo { get; }
     }
 }
 

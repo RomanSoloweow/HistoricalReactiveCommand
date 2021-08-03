@@ -1,5 +1,7 @@
 ﻿using ReactiveUI;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -8,14 +10,15 @@ using HistoricalReactiveCommand.Imports;
 using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
+using DynamicData;
 
 [assembly: InternalsVisibleTo("HistoricalReactiveCommand.Tests")]
 
 namespace HistoricalReactiveCommand
 {
-    public static class ReactiveCommandWithHistory
+    public static class ReactiveCommandWithGroupingHistory
     {
-        public static ReactiveCommandWithHistory<TParam, TResult> CreateWithHistoryFromTask<TParam, TResult>(
+        public static ReactiveCommandWithGroupingHistory<TParam, TResult> CreateWithHistoryFromTask<TParam, TResult>(
             Func<TParam, TResult, CancellationToken, Task<TResult>> execute,
             Func<TParam, TResult, CancellationToken, Task<TResult>> discard,
             IObservable<bool>? canExecute = null,
@@ -34,7 +37,7 @@ namespace HistoricalReactiveCommand
             return CreateWithHistoryFromTask(execute, discard, canExecute, outputScheduler, historyId);
         }
 
-        public static ReactiveCommandWithHistory<TParam, TResult> CreateWithHistoryFromTask<TParam, TResult>(
+        public static ReactiveCommandWithGroupingHistory<TParam, TResult> CreateWithHistoryFromTask<TParam, TResult>(
             Func<TParam, TResult, Task<TResult>> execute,
             Func<TParam, TResult, Task<TResult>> discard,
             IObservable<bool>? canExecute = null,
@@ -56,7 +59,7 @@ namespace HistoricalReactiveCommand
                     canExecute, outputScheduler, historyId);
         }
 
-        public static ReactiveCommandWithHistory<TParam, Unit> CreateWithHistoryFromTask<TParam>(
+        public static ReactiveCommandWithGroupingHistory<TParam, Unit> CreateWithHistoryFromTask<TParam>(
             Func<TParam, Task> execute,
             Func<TParam, Task> discard,
             IObservable<bool>? canExecute = null,
@@ -78,7 +81,7 @@ namespace HistoricalReactiveCommand
                 canExecute, outputScheduler, historyId);
         }
 
-        public static ReactiveCommandWithHistory<TParam, Unit> CreateWithHistoryFromTask<TParam>(
+        public static ReactiveCommandWithGroupingHistory<TParam, Unit> CreateWithHistoryFromTask<TParam>(
             Func<TParam, CancellationToken, Task> execute,
             Func<TParam, CancellationToken, Task> discard,
             IObservable<bool>? canExecute = null,
@@ -100,7 +103,7 @@ namespace HistoricalReactiveCommand
                 canExecute, outputScheduler, historyId);
         }
 
-        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistoryFromTask(
+        public static ReactiveCommandWithGroupingHistory<Unit, Unit> CreateWithHistoryFromTask(
             Func<Task> execute,
             Func<Task> discard,
             IObservable<bool>? canExecute = null,
@@ -122,7 +125,7 @@ namespace HistoricalReactiveCommand
                     canExecute, outputScheduler, historyId);
         }
 
-        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistoryFromTask(
+        public static ReactiveCommandWithGroupingHistory<Unit, Unit> CreateWithHistoryFromTask(
             Func<CancellationToken, Task> execute,
             Func<CancellationToken, Task> discard,
             string historyId = "",
@@ -143,7 +146,7 @@ namespace HistoricalReactiveCommand
                 canExecute, outputScheduler, historyId);
         }
 
-        public static ReactiveCommandWithHistory<Unit, TResult> CreateWithHistoryFromTask<TResult>(
+        public static ReactiveCommandWithGroupingHistory<Unit, TResult> CreateWithHistoryFromTask<TResult>(
             
             Func<TResult, Task<TResult>> execute,
             Func<TResult, Task<TResult>> discard,
@@ -166,7 +169,7 @@ namespace HistoricalReactiveCommand
                 canExecute, outputScheduler, historyId);
         }
 
-        public static ReactiveCommandWithHistory<Unit, TResult> CreateWithHistoryFromTask<TResult>(
+        public static ReactiveCommandWithGroupingHistory<Unit, TResult> CreateWithHistoryFromTask<TResult>(
             Func<TResult, CancellationToken, Task<TResult>> execute,
             Func<TResult, CancellationToken, Task<TResult>> discard,
             IObservable<bool>? canExecute = null,
@@ -187,7 +190,7 @@ namespace HistoricalReactiveCommand
                 canExecute, outputScheduler, historyId);
         }
 
-        public static ReactiveCommandWithHistory<TParam, Unit> CreateWithHistory<TParam>(
+        public static ReactiveCommandWithGroupingHistory<TParam, Unit> CreateWithHistory<TParam>(
             Action<TParam> execute,
             Action<TParam> discard,
             IObservable<bool>? canExecute = null,
@@ -210,7 +213,7 @@ namespace HistoricalReactiveCommand
 
         }
 
-        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistory(
+        public static ReactiveCommandWithGroupingHistory<Unit, Unit> CreateWithHistory(
             
             Action execute,
             Action discard,
@@ -234,7 +237,7 @@ namespace HistoricalReactiveCommand
 
         }
 
-        public static ReactiveCommandWithHistory<Unit, TResult> CreateWithHistory<TResult>(
+        public static ReactiveCommandWithGroupingHistory<Unit, TResult> CreateWithHistory<TResult>(
             
             Func<TResult, TResult> execute,
             Func<TResult, TResult> discard,
@@ -256,7 +259,7 @@ namespace HistoricalReactiveCommand
                 canExecute, outputScheduler, historyId);
         }
 
-        public static ReactiveCommandWithHistory<TParam, TResult> CreateWithHistory<TParam, TResult>(
+        public static ReactiveCommandWithGroupingHistory<TParam, TResult> CreateWithHistory<TParam, TResult>(
             
             Func<TParam, TResult, TResult> execute,
             Func<TParam, TResult, TResult> discard,
@@ -279,12 +282,12 @@ namespace HistoricalReactiveCommand
                           observer.OnCompleted();
                           return new CompositeDisposable();
                       }),
-                  HistoryContext.GetContext(historyId, outputScheduler),
+                  TransactionalHistoryContext.GetContext(historyId, outputScheduler),
                   canExecute ?? Observables.True,
                   outputScheduler ?? RxApp.MainThreadScheduler);
         }
 
-        public static ReactiveCommandWithHistory<TParam, TResult> CreateWithHistoryFromObservable<TParam, TResult>(
+        public static ReactiveCommandWithGroupingHistory<TParam, TResult> CreateWithHistoryFromObservable<TParam, TResult>(
             
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard,
@@ -305,17 +308,17 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(discard));
             }
 
-            return new ReactiveCommandWithHistory<TParam, TResult>(
+            return new ReactiveCommandWithGroupingHistory<TParam, TResult>(
                  execute, discard,
-                HistoryContext.GetContext(historyId, outputScheduler),
+                 TransactionalHistoryContext.GetContext(historyId, outputScheduler),
                 canExecute ?? Observables.True,
                 outputScheduler ?? RxApp.MainThreadScheduler);
         }
 
-        public static ReactiveCommandWithHistory<TParam, TResult> CreateWithHistoryFromTask<TParam, TResult>(
+        public static ReactiveCommandWithGroupingHistory<TParam, TResult> CreateWithHistoryFromTask<TParam, TResult>(
             Func<TParam, TResult, CancellationToken, Task<TResult>> execute,
             Func<TParam, TResult, CancellationToken, Task<TResult>> discard,
-            IHistory history,
+            ITransactionalHistory history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -339,11 +342,11 @@ namespace HistoricalReactiveCommand
                 history, canExecute, outputScheduler);
         }
 
-        public static ReactiveCommandWithHistory<TParam, TResult> CreateWithHistoryFromTask<TParam, TResult>(
+        public static ReactiveCommandWithGroupingHistory<TParam, TResult> CreateWithHistoryFromTask<TParam, TResult>(
             
             Func<TParam, TResult, Task<TResult>> execute,
             Func<TParam, TResult, Task<TResult>> discard,
-            IHistory history,
+            ITransactionalHistory history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -366,11 +369,11 @@ namespace HistoricalReactiveCommand
                      history, canExecute, outputScheduler);
         }
 
-        public static ReactiveCommandWithHistory<TParam, Unit> CreateWithHistoryFromTask<TParam>(
+        public static ReactiveCommandWithGroupingHistory<TParam, Unit> CreateWithHistoryFromTask<TParam>(
             
             Func<TParam, Task> execute,
             Func<TParam, Task> discard,
-            IHistory history,
+            ITransactionalHistory history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -393,11 +396,11 @@ namespace HistoricalReactiveCommand
                 history, canExecute, outputScheduler);
         }
 
-        public static ReactiveCommandWithHistory<TParam, Unit> CreateWithHistoryFromTask<TParam>(
+        public static ReactiveCommandWithGroupingHistory<TParam, Unit> CreateWithHistoryFromTask<TParam>(
             
             Func<TParam, CancellationToken, Task> execute,
             Func<TParam, CancellationToken, Task> discard,
-            IHistory history,
+            ITransactionalHistory history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -420,11 +423,11 @@ namespace HistoricalReactiveCommand
                 history, canExecute, outputScheduler);
         }
 
-        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistoryFromTask(
+        public static ReactiveCommandWithGroupingHistory<Unit, Unit> CreateWithHistoryFromTask(
             
             Func<Task> execute,
             Func<Task> discard,
-            IHistory history,
+            ITransactionalHistory history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -447,11 +450,11 @@ namespace HistoricalReactiveCommand
                     history, canExecute, outputScheduler);
         }
 
-        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistoryFromTask(
+        public static ReactiveCommandWithGroupingHistory<Unit, Unit> CreateWithHistoryFromTask(
             
             Func<CancellationToken, Task> execute,
             Func<CancellationToken, Task> discard,
-            IHistory history,
+            ITransactionalHistory history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -474,11 +477,11 @@ namespace HistoricalReactiveCommand
                 history, canExecute, outputScheduler);
         }
 
-        public static ReactiveCommandWithHistory<Unit, TResult> CreateWithHistoryFromTask<TResult>(
+        public static ReactiveCommandWithGroupingHistory<Unit, TResult> CreateWithHistoryFromTask<TResult>(
             
             Func<TResult, Task<TResult>> execute,
             Func<TResult, Task<TResult>> discard,
-            IHistory history,
+            ITransactionalHistory history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -501,11 +504,11 @@ namespace HistoricalReactiveCommand
                 history, canExecute, outputScheduler);
         }
 
-        public static ReactiveCommandWithHistory<Unit, TResult> CreateWithHistoryFromTask<TResult>(
+        public static ReactiveCommandWithGroupingHistory<Unit, TResult> CreateWithHistoryFromTask<TResult>(
             
             Func<TResult, CancellationToken, Task<TResult>> execute,
             Func<TResult, CancellationToken, Task<TResult>> discard,
-            IHistory history,
+            ITransactionalHistory history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -528,11 +531,11 @@ namespace HistoricalReactiveCommand
                 history, canExecute, outputScheduler);
         }
 
-        public static ReactiveCommandWithHistory<TParam, Unit> CreateWithHistory<TParam>(
+        public static ReactiveCommandWithGroupingHistory<TParam, Unit> CreateWithHistory<TParam>(
             
             Action<TParam> execute,
             Action<TParam> discard,
-            IHistory history,
+            ITransactionalHistory history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -556,11 +559,11 @@ namespace HistoricalReactiveCommand
 
         }
 
-        public static ReactiveCommandWithHistory<Unit, Unit> CreateWithHistory(
+        public static ReactiveCommandWithGroupingHistory<Unit, Unit> CreateWithHistory(
             
             Action execute,
             Action discard,
-            IHistory history,
+            ITransactionalHistory history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -584,11 +587,11 @@ namespace HistoricalReactiveCommand
 
         }
 
-        public static ReactiveCommandWithHistory<Unit, TResult> CreateWithHistory<TResult>(
+        public static ReactiveCommandWithGroupingHistory<Unit, TResult> CreateWithHistory<TResult>(
             
             Func<TResult, TResult> execute,
             Func<TResult, TResult> discard,
-            IHistory history,
+            ITransactionalHistory history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -611,11 +614,11 @@ namespace HistoricalReactiveCommand
                 history, canExecute, outputScheduler);
         }
 
-        public static ReactiveCommandWithHistory<TParam, TResult> CreateWithHistory<TParam, TResult>(
+        public static ReactiveCommandWithGroupingHistory<TParam, TResult> CreateWithHistory<TParam, TResult>(
             
             Func<TParam, TResult, TResult> execute,
             Func<TParam, TResult, TResult> discard,
-            IHistory history,
+            ITransactionalHistory history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -634,15 +637,15 @@ namespace HistoricalReactiveCommand
 
             return CreateWithHistory(
                  execute, discard,
-                HistoryContext.GetContext(history, outputScheduler),
+                 TransactionalHistoryContext.GetContext(history, outputScheduler),
                 canExecute, outputScheduler);
         }
 
-        public static ReactiveCommandWithHistory<TParam, TResult> CreateWithHistoryFromObservable<TParam, TResult>(
+        public static ReactiveCommandWithGroupingHistory<TParam, TResult> CreateWithHistoryFromObservable<TParam, TResult>(
             
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard,
-            IHistory history,
+            ITransactionalHistory history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -661,15 +664,15 @@ namespace HistoricalReactiveCommand
 
             return CreateWithHistoryFromObservable(
                  execute, discard, 
-                HistoryContext.GetContext(history, outputScheduler),
+                 TransactionalHistoryContext.GetContext(history, outputScheduler),
                 canExecute, outputScheduler);
         }
 
-        public static ReactiveCommandWithHistory<TParam, TResult> CreateWithHistory<TParam, TResult>(
+        public static ReactiveCommandWithGroupingHistory<TParam, TResult> CreateWithHistory<TParam, TResult>(
             
             Func<TParam, TResult, TResult> execute,
             Func<TParam, TResult, TResult> discard,
-            HistoryContext context,
+             ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> context,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -686,7 +689,7 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(discard));
             }
 
-            return new ReactiveCommandWithHistory<TParam, TResult>(
+            return new ReactiveCommandWithGroupingHistory<TParam, TResult>(
                   (param, result) => Observable.Create<TResult>(
                       observer =>
                       {
@@ -705,11 +708,11 @@ namespace HistoricalReactiveCommand
                   outputScheduler ?? RxApp.MainThreadScheduler);
         }
 
-        public static ReactiveCommandWithHistory<TParam, TResult> CreateWithHistoryFromObservable<TParam, TResult>(
+        public static ReactiveCommandWithGroupingHistory<TParam, TResult> CreateWithHistoryFromObservable<TParam, TResult>(
             
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard,
-            HistoryContext context,
+             ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> context,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -726,28 +729,31 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(discard));
             }
 
-            return new ReactiveCommandWithHistory<TParam, TResult>(
+            return new ReactiveCommandWithGroupingHistory<TParam, TResult>(
                 execute, discard, context,
                 canExecute ?? Observables.True,
                 outputScheduler ?? RxApp.MainThreadScheduler);
         }
+
+        public static IGrouping<TParam, TResult> CreateGrouping<TParam, TResult>(
+            this ReactiveCommandWithGroupingHistory<TParam, TResult> command,
+            Func<List<IHistoryEntryForGroup<TParam, TResult>>, IHistoryEntry> groupingAction)
+        {
+            return new Grouping<TParam, TResult>(groupingAction);
+        }
     }
     
-    public sealed class ReactiveCommandWithHistory<TParam, TResult> : ReactiveCommandBase<TParam, TResult>
+    public sealed class ReactiveCommandWithGroupingHistory<TParam, TResult> : ReactiveCommandBase<TParam, TResult>
     {
-        // private readonly ReactiveCommand<HistoryEntry, TResult> _discard;
-        // private readonly ReactiveCommand<TParam, TResult> _execute;
-        
+        private Stack<IGrouping<TParam, TResult>> Groups { get; } = new();
         private readonly ReactiveCommand<TParam, TResult> _execute;
-        private CompositeDisposable _disposable = new();
+        private readonly CompositeDisposable _disposable = new();
         private TParam _param;
-        // private Func<TParam, TResult, IObservable<TResult>> _execute;
-        // private Func<TParam, TResult, IObservable<TResult>> _discard;
         private readonly IDisposable _canExecuteSubscription;
-        internal ReactiveCommandWithHistory(
+        internal ReactiveCommandWithGroupingHistory(
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard,
-            HistoryContext context,
+            ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> context,
             IObservable<bool> canExecute,
             IScheduler outputScheduler)
         {
@@ -758,7 +764,7 @@ namespace HistoricalReactiveCommand
             if (outputScheduler == null) throw new ArgumentNullException(nameof(outputScheduler));
             if (context == null)         throw new ArgumentNullException(nameof(context));
             
-            History = context;
+            Context = context;
             
             var canActuallyExecute = context
                 .CanSnapshot
@@ -771,17 +777,27 @@ namespace HistoricalReactiveCommand
             
             _execute.Subscribe(result =>
             {
-                context.Snapshot(new HistoryEntry(
-                    (_)=> discard.Invoke(_param, result).Subscribe().DisposeWith(_disposable),
-                    (_)=> execute.Invoke(_param, result).Subscribe().DisposeWith(_disposable)));
+                var entry = new HistoryEntryForGroup<TParam, TResult>(
+                    (entry) => discard.Invoke(entry.Param, entry.Result).Subscribe().DisposeWith(_disposable),
+                    (entry) => execute.Invoke(entry.Param, entry.Result).Subscribe().DisposeWith(_disposable));
+
+                if (Groups.Any())
+                {
+                    Groups.Peek().Append(entry);
+                }
+                else
+                {
+                    context.Snapshot(entry);
+                }
+             
 
             });
             
-            History = context;
+            Context = context;
             _canExecuteSubscription = canExecute.Subscribe(OnCanExecuteChanged);
         }
         
-        public HistoryContext History {get; }
+        public  ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> Context {get; }
 
         public override IObservable<bool> CanExecute => _execute.CanExecute;
 
@@ -794,6 +810,23 @@ namespace HistoricalReactiveCommand
             return _execute.Subscribe(observer);
         }
 
+        public void StartGrouping(IGrouping<TParam, TResult> grouping)
+        {
+            Groups.Push(grouping);
+        }
+
+        public void CommitGroup()
+        {
+            var group = Groups.Pop();
+            this.Context.Snapshot(group.Group());
+        }
+        
+        public void RollbackGroup()
+        {
+            var group = Groups.Pop();
+            group.Rollback();
+        }
+        
         public override IObservable<TResult> Execute(TParam parameter = default)
         {
             _param = parameter;
@@ -805,6 +838,7 @@ namespace HistoricalReactiveCommand
             return Execute(default!);
         }
 
+        
         protected override void Dispose(bool disposing)
         {
             _disposable.Dispose();

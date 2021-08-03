@@ -5,26 +5,22 @@ using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
 using System.Windows.Input;
 using HistoricalReactiveCommand.Imports;
-using HistoricalReactiveCommand;
 using Xunit;
-using System.Threading;
-using System.ComponentModel;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using System.Reactive.Threading.Tasks;
 
 namespace HistoricalReactiveCommand.Tests
 {
     public class ReactiveCommandWithHistoryTest
     {
-        private readonly Subject<bool> _canExecuteSubject = new Subject<bool>();
+        private readonly Subject<bool> _canExecuteSubject = new();
         private readonly IScheduler _scheduler = Scheduler.Immediate;
         
         
         [Fact]
         public void CanExecuteChangedIsAvailableViaICommand()
         {
-            ICommand fixture = ReactiveCommandEx.CreateWithHistoryFromObservable<Unit, Unit>(
+            ICommand fixture = ReactiveCommandWithHistory.CreateWithHistoryFromObservable<Unit, Unit>(
                 (parameter, result) => Observables.Unit,
                 (parameter, result) => Observables.Unit,
                 _canExecuteSubject,
@@ -45,7 +41,7 @@ namespace HistoricalReactiveCommand.Tests
         public void ShouldManageCommandHistory()
         {
             int myNumber = 0;
-            var command = ReactiveCommandEx.CreateWithHistory<int>(
+            var command = ReactiveCommandWithHistory.CreateWithHistory<int>(
              (number) => { myNumber += number; },
              (number) => { myNumber -= number; },
               Observables.True, _scheduler);
@@ -68,7 +64,7 @@ namespace HistoricalReactiveCommand.Tests
         public async Task CanExecuteChangeOnExecutingCommandAsync()
         {
 
-            ICommand fixture = ReactiveCommandEx.CreateWithHistoryFromObservable<Unit, Unit>(
+            ICommand fixture = ReactiveCommandWithHistory.CreateWithHistoryFromObservable<Unit, Unit>(
               (parameter, result) => Observables.Unit,
               (parameter, result) => Observables.Unit,
               _canExecuteSubject,

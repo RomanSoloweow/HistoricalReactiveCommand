@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace HistoricalReactiveCommand
+﻿namespace HistoricalReactiveCommand
 {
     public interface ITransition
     {
-        public void Append(Action undo, Action redo);
+        public void Append(IHistoryEntry entry);
         void Execute(IHistory history);
         void Discard(IHistory history);
     }

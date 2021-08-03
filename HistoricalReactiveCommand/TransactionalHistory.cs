@@ -1,23 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using HistoricalReactiveCommand.Imports;
 
 namespace HistoricalReactiveCommand
 {
     public class TransactionalHistory:ITransactionalHistory
     {
-        private Stack<ITransition> Transitions { get; } = new Stack<ITransition>();
-        private Stack<HistoryEntry> StackRedo { get; } = new Stack<HistoryEntry>();
-        private Stack<HistoryEntry> StackUndo { get; } = new Stack<HistoryEntry>();
+        private Stack<ITransition> Transitions { get; } = new();
+        private Stack<IHistoryEntry> StackRedo { get; } = new();
+        private Stack<IHistoryEntry> StackUndo { get; } = new();
         
-        private readonly Subject<bool> _canRecord = new Subject<bool>();
-        private readonly Subject<bool> _canUndo = new Subject<bool>();
-        private readonly Subject<bool> _canRedo = new Subject<bool>();
-        private readonly Subject<bool> _canClear = new Subject<bool>();
+        private readonly Subject<bool> _canRecord = new();
+        private readonly Subject<bool> _canUndo = new();
+        private readonly Subject<bool> _canRedo = new();
+        private readonly Subject<bool> _canClear = new();
 
         public TransactionalHistory(string id)
         {
@@ -28,7 +26,7 @@ namespace HistoricalReactiveCommand
 
         public IObservable<bool> CanUndo => _canUndo.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanRedo => _canRedo.AsObservable().DistinctUntilChanged();
-        public IObservable<bool> CanRecord => _canRecord.AsObservable().DistinctUntilChanged();
+        public IObservable<bool> CanSnapshot => _canRecord.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanClear => _canClear.AsObservable().DistinctUntilChanged();
         
         public void Undo()
@@ -55,17 +53,18 @@ namespace HistoricalReactiveCommand
             UpdateSubjects();
         }
 
-        public void Snapshot(Action undo, Action redo)
+
+        public void Snapshot(IHistoryEntry entry)
         {
             StackRedo.Clear();
             UpdateSubjects(true);
             if (Transitions.Any())
             {
-                Transitions.Peek().Append(undo, redo);
+                Transitions.Peek().Append(entry);
             }
             else
             {
-                StackUndo.Push(new HistoryEntry(undo, redo));
+                StackUndo.Push(entry);
             }
             UpdateSubjects();
         }
@@ -80,6 +79,7 @@ namespace HistoricalReactiveCommand
         }
         
         #region ITransactionalHistory
+        
         public void BeginTransaction(ITransition transition)
         {
             UpdateSubjects(true);
@@ -91,9 +91,10 @@ namespace HistoricalReactiveCommand
         { 
             UpdateSubjects(true);
             var transition = Transitions.Pop();
-            Snapshot(
-                ()=>transition.Execute(this),
-                ()=>transition.Discard(this));
+            Snapshot(new HistoryEntry(
+                (entry) => transition.Execute(this),
+                (entry) => transition.Discard(this)));
+            
             UpdateSubjects();
         }
 

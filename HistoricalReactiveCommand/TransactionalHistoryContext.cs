@@ -7,9 +7,9 @@ using Splat;
 
 namespace HistoricalReactiveCommand
 {
-    public sealed class HistoryContext: IHistoryContext<IHistory, IHistoryEntry>, IDisposable
+    public class TransactionalHistoryContext: ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry>
     {
-        internal static HistoryContext GetContext(IHistory history, IScheduler? outputScheduler = null)
+        internal static TransactionalHistoryContext GetContext(ITransactionalHistory history, IScheduler? outputScheduler = null)
         {
             if (history == null)
             {
@@ -21,70 +21,70 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(history.Id));
             }
         
-            var context = Locator.Current.GetService<HistoryContext>(history.Id);
+            var context = Locator.Current.GetService<TransactionalHistoryContext>(history.Id);
         
             if (context != null)
             {
                 return context;
             }
         
-            context = new HistoryContext(history, outputScheduler ?? RxApp.MainThreadScheduler);
+            context = new TransactionalHistoryContext(history, outputScheduler ?? RxApp.MainThreadScheduler);
             Locator.CurrentMutable.RegisterConstant(context, history.Id);
             return context;
         }
 
-        internal static HistoryContext GetContext(string historyId = "", IScheduler? outputScheduler = null)
+        internal static TransactionalHistoryContext GetContext(string historyId = "", IScheduler? outputScheduler = null)
         {
             if (historyId == null)
             {
                 throw new ArgumentNullException(nameof(historyId));
             }
         
-            var context = Locator.Current.GetService<HistoryContext>(historyId);
+            var context = Locator.Current.GetService<TransactionalHistoryContext>(historyId);
         
             if (context != null)
             {
                 return context;
             }
         
-            context = new HistoryContext(new History(historyId), outputScheduler ?? RxApp.MainThreadScheduler);
+            context = new TransactionalHistoryContext(new TransactionalHistory(historyId), outputScheduler ?? RxApp.MainThreadScheduler);
             Locator.CurrentMutable.RegisterConstant(context, historyId);
             return context;
         }
         
-        internal HistoryContext(IHistory history, IScheduler outputScheduler)
+        internal TransactionalHistoryContext(ITransactionalHistory history, IScheduler outputScheduler)
         {
             History = history;
-
+        
             var canUndo = CanSnapshot
                 .CombineLatest(history.CanUndo, (recordable, executable) => recordable && executable);
-
+        
             Undo = ReactiveCommand.Create(history.Undo,  canUndo, outputScheduler);
-
+        
             var canRedo = CanSnapshot
                 .CombineLatest(history.CanRedo, (recordable, executable) => recordable && executable);
-
+        
             Redo = ReactiveCommand.Create(history.Redo, canRedo, outputScheduler);
             
             Clear = ReactiveCommand.Create(history.Clear, history.CanClear, outputScheduler);
         }
-
-        public IHistory History { get; }
-        public ReactiveCommand<Unit, Unit> Undo { get;  }
         
-        public ReactiveCommand<Unit, Unit> Redo { get;  }
+        public ITransactionalHistory History { get; }
+        public ReactiveCommand<Unit, Unit> Undo { get; }
+        public ReactiveCommand<Unit, Unit> Redo { get; }
+        public ReactiveCommand<Unit, Unit> Clear { get; }
+        public IObservable<bool> CanSnapshot => History.CanSnapshot;
+        public void Snapshot(IHistoryEntry entry) => History.Snapshot(entry);
+        public void BeginTransaction(ITransition transition) => History.BeginTransaction(transition);
+        public void CommitTransaction() => History.CommitTransaction();
+        public void RollbackTransaction() => History.RollbackTransaction();
         
-        public ReactiveCommand<Unit, Unit> Clear { get;  }
-
         public void Dispose()
         {
             Undo.Dispose();
             Redo.Dispose();
             Clear.Dispose();
         }
-
-        public void Snapshot(IHistoryEntry entry) => History.Snapshot(entry);
-        public IObservable<bool> CanSnapshot => History.CanSnapshot;
 
     }
 }

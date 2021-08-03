@@ -1,22 +1,32 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace HistoricalReactiveCommand
 {
     public class Transition:ITransition
     {
-        public void Append(Action undo, Action redo)
+        private List<IHistoryEntry> Operations { get; } = new();
+        public void Append(IHistoryEntry entry)
         {
-            throw new NotImplementedException();
+            Operations.Add(entry);
         }
 
         public void Execute(IHistory history)
         {
-            throw new NotImplementedException();
+            foreach (var operation in Operations)
+            {
+                operation.Undo();
+            }
         }
 
         public void Discard(IHistory history)
         {
-            throw new NotImplementedException();
+            foreach (var operation in Operations)
+            {
+                operation.Redo();
+            }
         }
+        
+        
     }
 }
