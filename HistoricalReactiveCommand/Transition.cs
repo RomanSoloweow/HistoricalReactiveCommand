@@ -1,20 +1,22 @@
-﻿namespace HistoricalReactiveCommand
+﻿using System;
+
+namespace HistoricalReactiveCommand
 {
     public class Transition:ITransition
     {
-        public void Append(HistoryEntry historyEntry)
+        public void Append(Action undo, Action redo)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public void Execute(IHistory history)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public void Discard(IHistory history)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }

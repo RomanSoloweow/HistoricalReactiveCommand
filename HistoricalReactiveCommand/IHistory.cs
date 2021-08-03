@@ -3,7 +3,7 @@ using System.Reactive;
 
 namespace HistoricalReactiveCommand
 {
-    public interface IHistory
+    public interface IHistory: IDisposable
     {
         string Id { get; }
         IObservable<bool> CanUndo { get; }

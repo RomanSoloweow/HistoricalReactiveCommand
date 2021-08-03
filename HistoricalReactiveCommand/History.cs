@@ -8,7 +8,7 @@ using HistoricalReactiveCommand.Imports;
 
 namespace HistoricalReactiveCommand
 {
-    public class History : IHistory, IDisposable
+    public class History : IHistory
     {
         private Stack<HistoryEntry> StackRedo { get; } = new Stack<HistoryEntry>();
         private Stack<HistoryEntry> StackUndo { get; } = new Stack<HistoryEntry>();
@@ -60,43 +60,7 @@ namespace HistoricalReactiveCommand
             StackUndo.Push(new HistoryEntry(undo, redo));
             UpdateSubjects();
         }
-
-        // public IObservable<HistoryEntry> Undo(Func<HistoryEntry, IObservable<HistoryEntry>> discard)
-        // {
-        //     if (StackUndo.Count == 0)
-        //         throw new Exception();
-        //     
-        //     UpdateSubjects(true);
-        //     return discard(StackUndo.Pop()).Do(entry =>
-        //     {
-        //         StackRedo.Push(entry);
-        //         UpdateSubjects();
-        //     });
-        // }
-        //
-        // public IObservable<HistoryEntry> Redo(Func<HistoryEntry, IObservable<HistoryEntry>> execute)
-        // {
-        //     if (StackRedo.Count == 0)
-        //         throw new Exception();
-        //     
-        //     UpdateSubjects(true);
-        //     return execute(StackRedo.Pop()).Do(entry =>
-        //     {
-        //         StackUndo.Push(entry);
-        //         UpdateSubjects();
-        //     });
-        // }
-        //
-        // public IObservable<HistoryEntry> Snapshot(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute)
-        // {
-        //     StackRedo.Clear();
-        //     UpdateSubjects(true);
-        //     return execute(entry).Do(updatedEntry =>
-        //     {
-        //         StackUndo.Push(updatedEntry);
-        //         UpdateSubjects();
-        //     });
-        // }
+        
 
         public void Clear()
         {
