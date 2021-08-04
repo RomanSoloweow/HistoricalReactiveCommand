@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
 using HistoricalReactiveCommand.Imports;
@@ -12,7 +14,7 @@ namespace HistoricalReactiveCommand.Tests
         private readonly IScheduler _scheduler = Scheduler.Immediate;
 
             [Fact]
-            public void ShouldManageCommandHistory()
+            public void GroupingByParameterRollbackSuccess()
             {
                 int myNumber = 0;
                 var command = ReactiveCommandWithGroupingHistory.CreateWithHistory<int>(
@@ -20,20 +22,241 @@ namespace HistoricalReactiveCommand.Tests
                     (number) => { myNumber -= number; },
                     Observables.True, _scheduler);
 
-                command.CreateGrouping()
+                var group = command.CreateGroupingByParameter(ints =>
+                {
+                    return ints.Sum(x => x);
+                });
+                    
+                command.StartGrouping(group);
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.RollbackGroup();
+                Assert.Equal(0, myNumber);
+            }
                 
+            [Fact]
+            public void GroupingByParameterCommitSuccess()
+            {
+                int myNumber = 0;
+                var command = ReactiveCommandWithGroupingHistory.CreateWithHistory<int>(
+                    (number) => { myNumber += number; },
+                    (number) => { myNumber -= number; },
+                    Observables.True, _scheduler);
+
+                var group = command.CreateGroupingByParameter(ints =>
+                {
+                    return ints.Sum(x => x);
+                });
+                    
+                command.StartGrouping(group);
                 command.Execute(25).Subscribe();
-                Assert.Equal(25, myNumber);
                 command.Execute(25).Subscribe();
-                Assert.Equal(50, myNumber);
-                command.Context.Undo.Execute().Subscribe();
-                Assert.Equal(25, myNumber);
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.CommitGrouping();
+                Assert.Equal(100, myNumber);
+            }
+
+            [Fact]
+            public void GroupingByParameterUndoRedoSuccess()
+            {
+                int myNumber = 0;
+                var command = ReactiveCommandWithGroupingHistory.CreateWithHistory<int>(
+                    (number) => { myNumber += number; },
+                    (number) => { myNumber -= number; },
+                    Observables.True, _scheduler);
+
+                var group = command.CreateGroupingByParameter(ints =>
+                {
+                    return ints.Sum(x => x);
+                });
+                    
+                command.StartGrouping(group);
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.CommitGrouping();
+                Assert.Equal(100, myNumber);
                 command.Context.Undo.Execute().Subscribe();
                 Assert.Equal(0, myNumber);
                 command.Context.Redo.Execute().Subscribe();
-                Assert.Equal(25, myNumber);
+                Assert.Equal(100, myNumber);
+
+            }
+            
+            
+            [Fact]
+            public void GroupingByParameterAndResultRollbackSuccess()
+            {
+                int myNumber = 0;
+                var command = ReactiveCommandWithGroupingHistory.CreateWithHistory<int>(
+                    (number) => { myNumber += number; },
+                    (number) => { myNumber -= number; },
+                    Observables.True, _scheduler);
+
+                var group = command.CreateGroupingByParameterResult(args =>
+                {
+                    var param = args.Select(x => x.Item1).Sum(x => x);
+                    return (param, Unit.Default);
+                 });
+                    
+                command.StartGrouping(group);
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.RollbackGroup();
+                Assert.Equal(0, myNumber);
+            }
+                
+            [Fact]
+            public void GroupingByParameterAndResultCommitSuccess()
+            {
+                int myNumber = 0;
+                var command = ReactiveCommandWithGroupingHistory.CreateWithHistory<int>(
+                    (number) => { myNumber += number; },
+                    (number) => { myNumber -= number; },
+                    Observables.True, _scheduler);
+
+                var group = command.CreateGroupingByParameterResult(args =>
+                {
+                    var param = args.Select(x => x.Item1).Sum(x => x);
+                    return (param, Unit.Default);
+;                });
+                    
+                command.StartGrouping(group);
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.CommitGrouping();
+                Assert.Equal(100, myNumber);
+                command.Context.Undo.Execute().Subscribe();
+                Assert.Equal(0, myNumber);
                 command.Context.Redo.Execute().Subscribe();
-                Assert.Equal(50, myNumber);
+                Assert.Equal(100, myNumber);
+            }
+            
+            [Fact]
+            public void GroupingByParameterAndResultUndoRedoSuccess()
+            {
+                int myNumber = 0;
+                var command = ReactiveCommandWithGroupingHistory.CreateWithHistory<int>(
+                    (number) => { myNumber += number; },
+                    (number) => { myNumber -= number; },
+                    Observables.True, _scheduler);
+
+                var group = command.CreateGroupingByParameterResult(args =>
+                {
+                    var param = args.Select(x => x.Item1).Sum(x => x);
+                    return (param, Unit.Default);
+                    ;                });
+                    
+                command.StartGrouping(group);
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.CommitGrouping();
+                Assert.Equal(100, myNumber);
+            }
+            
+            [Fact]
+            public void GroupingAsEntryRollbackSuccess()
+            {
+                int myNumber = 0;
+                var command = ReactiveCommandWithGroupingHistory.CreateWithHistory<int>(
+                    (number) => { myNumber += number; },
+                    (number) => { myNumber -= number; },
+                    Observables.True, _scheduler);
+
+ 
+                var group = command.CreateGrouping((param) =>
+                {
+                    var sum = param.Sum(x => x.Param);
+                    return new HistoryEntry((entry) =>
+                        {
+                            myNumber += sum;
+                        },
+                        (entry) =>
+                        {
+                            myNumber -= sum;
+                        });
+                });
+                command.StartGrouping(group);
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.RollbackGroup();
+                Assert.Equal(0, myNumber);
+            }
+            
+            [Fact]
+            public void GroupingAsEntryCommitSuccess()
+            {
+                int myNumber = 0;
+                var command = ReactiveCommandWithGroupingHistory.CreateWithHistory<int>(
+                    (number) => { myNumber += number; },
+                    (number) => { myNumber -= number; },
+                    Observables.True, _scheduler);
+
+                var group = command.CreateGrouping((param) =>
+                {
+                    var sum = param.Sum(x => x.Param);
+                    return new HistoryEntry((entry) =>
+                        {
+                            myNumber += sum;
+                        },
+                        (entry) =>
+                        {
+                            myNumber -= sum;
+                        });
+                });
+                command.StartGrouping(group);
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.CommitGrouping();
+                Assert.Equal(100, myNumber);
+            }
+            
+            [Fact]
+            public void GroupingAsEntryUndoRedoSuccess()
+            {
+                int myNumber = 0;
+                var command = ReactiveCommandWithGroupingHistory.CreateWithHistory<int>(
+                    (number) => { myNumber += number; },
+                    (number) => { myNumber -= number; },
+                    Observables.True, _scheduler);
+
+                var group = command.CreateGrouping((param) =>
+                {
+                    var sum = param.Sum(x => x.Param);
+                    return new HistoryEntry((entry) =>
+                        {
+                            myNumber -= sum;
+                        },
+                        (entry) =>
+                        {
+                            myNumber += sum;
+                        });
+                });
+                command.StartGrouping(group);
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.Execute(25).Subscribe();
+                command.CommitGrouping();
+                Assert.Equal(100, myNumber);
+                command.Context.Undo.Execute().Subscribe();
+                Assert.Equal(0, myNumber);
+                command.Context.Redo.Execute().Subscribe();
+                Assert.Equal(100, myNumber);
             }
     }
 
