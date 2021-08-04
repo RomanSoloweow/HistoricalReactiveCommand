@@ -735,6 +735,37 @@ namespace HistoricalReactiveCommand
                 outputScheduler ?? RxApp.MainThreadScheduler);
         }
 
+        public static void StartGroupingByParameterResult<TParam, TResult>(
+            this ReactiveCommandWithGroupingHistory<TParam, TResult> command,
+            Func<List<(TParam, TResult)>, (TParam, TResult)> groupingAction)
+        {
+            var grouping =  new GroupingByParamAndResult<TParam, TResult>(
+                command.executeAction,
+                command.discardAction,
+                groupingAction);
+            
+            command.StartGrouping(grouping);
+        }
+        public static void StartGroupingAsEntry<TParam, TResult>(
+            this ReactiveCommandWithGroupingHistory<TParam, TResult> command,
+            Func<List<IHistoryEntryForGroup<TParam, TResult>>, IHistoryEntry> groupingAction)
+        {
+            var grouping = new GroupingAsEntry<TParam, TResult>(groupingAction);
+            command.StartGrouping(grouping);
+        }
+        
+        public static void StartGroupingByParameter<TParam>(
+            this ReactiveCommandWithGroupingHistory<TParam, Unit> command,
+            Func<List<TParam>, TParam> groupingAction)
+        {
+            var grouping =  new GroupingByParam<TParam, Unit>(
+                param => { command.executeAction(param, Unit.Default).Subscribe();},
+                param => { command.discardAction(param, Unit.Default).Subscribe();},
+                groupingAction);
+            
+            command.StartGrouping(grouping);
+        }
+        
         public static IGrouping<TParam, TResult> CreateGroupingByParameterResult<TParam, TResult>(
             this ReactiveCommandWithGroupingHistory<TParam, TResult> command,
             Func<List<(TParam, TResult)>, (TParam, TResult)> groupingAction)
@@ -744,7 +775,7 @@ namespace HistoricalReactiveCommand
                 command.discardAction,
                 groupingAction);
         }
-        public static IGrouping<TParam, TResult> CreateGrouping<TParam, TResult>(
+        public static IGrouping<TParam, TResult> CreateGroupingAsEntry<TParam, TResult>(
             this ReactiveCommandWithGroupingHistory<TParam, TResult> command,
             Func<List<IHistoryEntryForGroup<TParam, TResult>>, IHistoryEntry> groupingAction)
         {
@@ -849,7 +880,7 @@ namespace HistoricalReactiveCommand
             group.Rollback();
         }
         
-        public override IObservable<TResult> Execute(TParam parameter = default)
+        public override IObservable<TResult> Execute(TParam parameter = default!)
         {
             _param = parameter;
             return _execute.Execute(parameter);

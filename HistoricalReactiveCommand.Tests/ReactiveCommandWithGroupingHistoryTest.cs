@@ -174,7 +174,7 @@ namespace HistoricalReactiveCommand.Tests
                     Observables.True, _scheduler);
 
  
-                var group = command.CreateGrouping((param) =>
+                var group = command.CreateGroupingAsEntry((param) =>
                 {
                     var sum = param.Sum(x => x.Param);
                     return new HistoryEntry((entry) =>
@@ -204,7 +204,7 @@ namespace HistoricalReactiveCommand.Tests
                     (number) => { myNumber -= number; },
                     Observables.True, _scheduler);
 
-                var group = command.CreateGrouping((param) =>
+                var group = command.CreateGroupingAsEntry((param) =>
                 {
                     var sum = param.Sum(x => x.Param);
                     return new HistoryEntry((entry) =>
@@ -234,7 +234,7 @@ namespace HistoricalReactiveCommand.Tests
                     (number) => { myNumber -= number; },
                     Observables.True, _scheduler);
 
-                var group = command.CreateGrouping((param) =>
+                var group = command.CreateGroupingAsEntry((param) =>
                 {
                     var sum = param.Sum(x => x.Param);
                     return new HistoryEntry((entry) =>
