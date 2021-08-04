@@ -15,7 +15,7 @@ namespace HistoricalReactiveCommand
         {
             foreach (var operation in Operations)
             {
-                operation.Undo();
+                operation.Redo();
             }
         }
 
@@ -23,7 +23,7 @@ namespace HistoricalReactiveCommand
         {
             foreach (var operation in Operations)
             {
-                operation.Redo();
+                operation.Undo();
             }
         }
         

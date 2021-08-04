@@ -92,8 +92,8 @@ namespace HistoricalReactiveCommand
             UpdateSubjects(true);
             var transition = Transitions.Pop();
             Snapshot(new HistoryEntry(
-                (entry) => transition.Execute(this),
-                (entry) => transition.Discard(this)));
+                (entry) => transition.Discard(this),
+                (entry) => transition.Execute(this)));
             
             UpdateSubjects();
         }
@@ -138,7 +138,7 @@ namespace HistoricalReactiveCommand
                 _canUndo.OnNext(hasUndoEntries && !inTransition);
                 _canRedo.OnNext(hasRedoEntries && !inTransition);
                 _canClear.OnNext((hasUndoEntries || hasRedoEntries )&& !inTransition);
-                _canRecord.OnNext(!inTransition);
+                _canRecord.OnNext(true);
             }
         }
         

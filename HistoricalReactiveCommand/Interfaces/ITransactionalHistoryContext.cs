@@ -4,6 +4,8 @@
         where THistory : ITransactionalHistory
         where THistoryEntry : IHistoryEntry
     {
-        
+        void BeginTransaction(ITransition transition);
+        void CommitTransaction();
+        void RollbackTransaction();
     }
 }

@@ -80,9 +80,9 @@ namespace HistoricalReactiveCommand.Tests
                 command.Execute(25).Subscribe();
                 command.CommitGrouping();
                 Assert.Equal(100, myNumber);
-                command.Context.Undo.Execute().Subscribe();
+                command.History.Undo.Execute().Subscribe();
                 Assert.Equal(0, myNumber);
-                command.Context.Redo.Execute().Subscribe();
+                command.History.Redo.Execute().Subscribe();
                 Assert.Equal(100, myNumber);
 
             }
@@ -134,9 +134,9 @@ namespace HistoricalReactiveCommand.Tests
                 command.Execute(25).Subscribe();
                 command.CommitGrouping();
                 Assert.Equal(100, myNumber);
-                command.Context.Undo.Execute().Subscribe();
+                command.History.Undo.Execute().Subscribe();
                 Assert.Equal(0, myNumber);
-                command.Context.Redo.Execute().Subscribe();
+                command.History.Redo.Execute().Subscribe();
                 Assert.Equal(100, myNumber);
             }
             
@@ -253,9 +253,9 @@ namespace HistoricalReactiveCommand.Tests
                 command.Execute(25).Subscribe();
                 command.CommitGrouping();
                 Assert.Equal(100, myNumber);
-                command.Context.Undo.Execute().Subscribe();
+                command.History.Undo.Execute().Subscribe();
                 Assert.Equal(0, myNumber);
-                command.Context.Redo.Execute().Subscribe();
+                command.History.Redo.Execute().Subscribe();
                 Assert.Equal(100, myNumber);
             }
     }
