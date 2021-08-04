@@ -11,7 +11,7 @@ namespace HistoricalReactiveCommand
         private Stack<IHistoryEntry> StackRedo { get; } = new();
         private Stack<IHistoryEntry> StackUndo { get; } = new();
         
-        private readonly Subject<bool> _canRecord = new();
+        private readonly Subject<bool> _canSnapshot = new();
         private readonly Subject<bool> _canUndo = new();
         private readonly Subject<bool> _canRedo = new();
         private readonly Subject<bool> _canClear = new();
@@ -19,13 +19,14 @@ namespace HistoricalReactiveCommand
         public History(string id)
         {
             Id = id;
+            UpdateSubjects(true);
         }
 
         public string Id { get; }
 
         public IObservable<bool> CanUndo => _canUndo.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanRedo => _canRedo.AsObservable().DistinctUntilChanged();
-        public IObservable<bool> CanSnapshot => _canRecord.AsObservable().DistinctUntilChanged();
+        public IObservable<bool> CanSnapshot => _canSnapshot.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanClear => _canClear.AsObservable().DistinctUntilChanged();
         public void Undo()
         {
@@ -75,7 +76,7 @@ namespace HistoricalReactiveCommand
             _canUndo.Dispose();
             _canRedo.Dispose();
             _canClear.Dispose();
-            _canRecord.Dispose();
+            _canSnapshot.Dispose();
         }
 
         private void UpdateSubjects(bool disableAll = false)
@@ -85,7 +86,7 @@ namespace HistoricalReactiveCommand
                 _canUndo.OnNext(false);
                 _canRedo.OnNext(false);
                 _canClear.OnNext(false);
-                _canRecord.OnNext(false);
+                _canSnapshot.OnNext(false);
             }
             else
             {
@@ -95,7 +96,7 @@ namespace HistoricalReactiveCommand
                 _canUndo.OnNext(hasUndoEntries);
                 _canRedo.OnNext(hasRedoEntries);
                 _canClear.OnNext(hasUndoEntries || hasRedoEntries);
-                _canRecord.OnNext(true);
+                _canSnapshot.OnNext(true);
             }
         }
     }

@@ -8,6 +8,7 @@ using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using HistoricalReactiveCommand.Imports;
 using System.Reactive;
+using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using DynamicData;
@@ -739,7 +740,7 @@ namespace HistoricalReactiveCommand
             this ReactiveCommandWithGroupingHistory<TParam, TResult> command,
             Func<List<(TParam, TResult)>, (TParam, TResult)> groupingAction)
         {
-            var grouping =  new GroupingByParamAndResult<TParam, TResult>(
+            var grouping = new GroupingByParamAndResult<TParam, TResult>(
                 command.executeAction,
                 command.discardAction,
                 groupingAction);
@@ -818,6 +819,7 @@ namespace HistoricalReactiveCommand
             History = history;
             executeAction = execute;
             discardAction = discard;
+            
             var canActuallyExecute = history
                 .CanSnapshot
                 .CombineLatest(canExecute, (recordable, executable) => recordable && executable);
@@ -871,7 +873,9 @@ namespace HistoricalReactiveCommand
         public void CommitGrouping()
         {
             var group = Groups.Pop();
-            this.History.Snapshot(group.Group());
+            
+            if(!group.IsEmpty)
+                this.History.Snapshot(group.Group());
         }
         
         public void RollbackGroup()

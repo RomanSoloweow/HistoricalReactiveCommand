@@ -49,11 +49,8 @@ namespace HistoricalReactiveCommand.Tests
             Assert.False(canUndo);
             Assert.False(canRedo);
 
-            // history.Record(
-            //         new HistoryEntry(Unit.Default, 42, "awesome"),
-            //         entry => Observable.Return(new HistoryEntry(entry.Parameter, entry.Result, entry.CommandKey)))
-            //     .Subscribe();
-
+            history.Snapshot(new HistoryEntry(_=>{},_=>{}));
+            
             Assert.True(canUndo);
             Assert.False(canRedo);
         }

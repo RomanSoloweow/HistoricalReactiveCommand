@@ -12,7 +12,7 @@ namespace HistoricalReactiveCommand
         private Stack<IHistoryEntry> StackRedo { get; } = new();
         private Stack<IHistoryEntry> StackUndo { get; } = new();
         
-        private readonly Subject<bool> _canRecord = new();
+        private readonly Subject<bool> _canSnapshot = new();
         private readonly Subject<bool> _canUndo = new();
         private readonly Subject<bool> _canRedo = new();
         private readonly Subject<bool> _canClear = new();
@@ -26,7 +26,7 @@ namespace HistoricalReactiveCommand
 
         public IObservable<bool> CanUndo => _canUndo.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanRedo => _canRedo.AsObservable().DistinctUntilChanged();
-        public IObservable<bool> CanSnapshot => _canRecord.AsObservable().DistinctUntilChanged();
+        public IObservable<bool> CanSnapshot => _canSnapshot.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanClear => _canClear.AsObservable().DistinctUntilChanged();
         
         public void Undo()
@@ -91,10 +91,14 @@ namespace HistoricalReactiveCommand
         { 
             UpdateSubjects(true);
             var transition = Transitions.Pop();
-            Snapshot(new HistoryEntry(
-                (entry) => transition.Discard(this),
-                (entry) => transition.Execute(this)));
             
+            if (!transition.IsEmpty)
+            {
+                Snapshot(new HistoryEntry(
+                    (entry) => transition.Discard(this),
+                    (entry) => transition.Execute(this)));
+            }
+
             UpdateSubjects();
         }
 
@@ -105,7 +109,12 @@ namespace HistoricalReactiveCommand
             transition.Discard(this);
             UpdateSubjects();
         }
-        
+
+        public void Block()
+        {
+            UpdateSubjects(true);
+        }
+
         #endregion ITransactionalHistory
 
         public void Dispose()
@@ -116,7 +125,7 @@ namespace HistoricalReactiveCommand
             _canUndo.Dispose();
             _canRedo.Dispose();
             _canClear.Dispose();
-            _canRecord.Dispose();
+            _canSnapshot.Dispose();
         }
 
         
@@ -127,7 +136,7 @@ namespace HistoricalReactiveCommand
                 _canUndo.OnNext(false);
                 _canRedo.OnNext(false);
                 _canClear.OnNext(false);
-                _canRecord.OnNext(false);
+                _canSnapshot.OnNext(false);
             }
             else
             {
@@ -138,7 +147,7 @@ namespace HistoricalReactiveCommand
                 _canUndo.OnNext(hasUndoEntries && !inTransition);
                 _canRedo.OnNext(hasRedoEntries && !inTransition);
                 _canClear.OnNext((hasUndoEntries || hasRedoEntries )&& !inTransition);
-                _canRecord.OnNext(true);
+                _canSnapshot.OnNext(true);
             }
         }
         

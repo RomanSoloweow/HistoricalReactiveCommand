@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HistoricalReactiveCommand
 {
@@ -26,7 +27,7 @@ namespace HistoricalReactiveCommand
                 operation.Undo();
             }
         }
-        
-        
+
+        public bool IsEmpty => !Operations.Any();
     }
 }

@@ -6,9 +6,11 @@ namespace HistoricalReactiveCommand
 {
     public class GroupingByParamAndResult<TParam, TResult>:IGrouping<TParam, TResult>
     {
-        private Func<TParam, TResult, IObservable<TResult>> _execute;
-        private Func<TParam, TResult, IObservable<TResult>> _discard;
-        private Func<List<(TParam, TResult)>, (TParam, TResult)> _groupingAction;
+        private readonly Func<TParam, TResult, IObservable<TResult>> _execute;
+        private readonly Func<TParam, TResult, IObservable<TResult>> _discard;
+        private readonly Func<List<(TParam, TResult)>, (TParam, TResult)> _groupingAction;
+        private readonly List<IHistoryEntryForGroup<TParam, TResult>> _groups = new();
+        public bool IsEmpty => !_groups.Any();
         public GroupingByParamAndResult(
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard, 
@@ -18,16 +20,15 @@ namespace HistoricalReactiveCommand
             _discard = discard;
             _groupingAction = groupingAction;
         }
-     
-        private List<IHistoryEntryForGroup<TParam, TResult>> Groups = new();
+        
         public void Append(IHistoryEntryForGroup<TParam, TResult> entry)
         {
-            Groups.Add(entry);
+            _groups.Add(entry);
         }
 
         public IHistoryEntry Group()
         {
-            var parameters = Groups.Select(
+            var parameters = _groups.Select(
                 x => (x.Param, x.Result)).ToList();
             var (param, result) = _groupingAction(parameters);
             return new HistoryEntry(
@@ -37,7 +38,7 @@ namespace HistoricalReactiveCommand
 
         public void Rollback()
         {
-            var parameters = Groups.Select(
+            var parameters = _groups.Select(
                 x => (x.Param, x.Result)).ToList();
             var (param, result) = _groupingAction(parameters);
 

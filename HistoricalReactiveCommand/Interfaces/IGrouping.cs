@@ -5,5 +5,6 @@
         public void Append(IHistoryEntryForGroup<TParam, TResult> entry);
         IHistoryEntry Group();
         void Rollback();
+        bool IsEmpty { get; }
     }
 }
