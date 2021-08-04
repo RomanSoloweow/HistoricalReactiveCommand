@@ -735,11 +735,30 @@ namespace HistoricalReactiveCommand
                 outputScheduler ?? RxApp.MainThreadScheduler);
         }
 
+        public static IGrouping<TParam, TResult> CreateGroupingByParameterResult<TParam, TResult>(
+            this ReactiveCommandWithGroupingHistory<TParam, TResult> command,
+            Func<List<(TParam, TResult)>, (TParam, TResult)> groupingAction)
+        {
+            return new GroupingByParamAndResult<TParam, TResult>(
+                command.executeAction,
+                command.discardAction,
+                groupingAction);
+        }
         public static IGrouping<TParam, TResult> CreateGrouping<TParam, TResult>(
             this ReactiveCommandWithGroupingHistory<TParam, TResult> command,
             Func<List<IHistoryEntryForGroup<TParam, TResult>>, IHistoryEntry> groupingAction)
         {
-            return new Grouping<TParam, TResult>(groupingAction);
+            return new GroupingAsEntry<TParam, TResult>(groupingAction);
+        }
+        
+        public static IGrouping<TParam, Unit> CreateGroupingByParameter<TParam>(
+            this ReactiveCommandWithGroupingHistory<TParam, Unit> command,
+            Func<List<TParam>, TParam> groupingAction)
+        {
+            return new GroupingByParam<TParam, Unit>(
+                param => { command.executeAction(param, Unit.Default).Subscribe();},
+                param => { command.discardAction(param, Unit.Default).Subscribe();},
+                groupingAction);
         }
     }
     
@@ -747,9 +766,10 @@ namespace HistoricalReactiveCommand
     {
         private Stack<IGrouping<TParam, TResult>> Groups { get; } = new();
         private readonly ReactiveCommand<TParam, TResult> _execute;
-        private readonly CompositeDisposable _disposable = new();
         private TParam _param;
         private readonly IDisposable _canExecuteSubscription;
+        internal Func<TParam, TResult, IObservable<TResult>> executeAction;
+        internal Func<TParam, TResult, IObservable<TResult>> discardAction;
         internal ReactiveCommandWithGroupingHistory(
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard,
@@ -765,7 +785,8 @@ namespace HistoricalReactiveCommand
             if (context == null)         throw new ArgumentNullException(nameof(context));
             
             Context = context;
-            
+            executeAction = execute;
+            discardAction = discard;
             var canActuallyExecute = context
                 .CanSnapshot
                 .CombineLatest(canExecute, (recordable, executable) => recordable && executable);
@@ -778,8 +799,9 @@ namespace HistoricalReactiveCommand
             _execute.Subscribe(result =>
             {
                 var entry = new HistoryEntryForGroup<TParam, TResult>(
-                    (entry) => discard.Invoke(entry.Param, entry.Result).Subscribe().DisposeWith(_disposable),
-                    (entry) => execute.Invoke(entry.Param, entry.Result).Subscribe().DisposeWith(_disposable));
+                    (entry) => discard.Invoke(entry.Param, entry.Result).Subscribe(),
+                    (entry) => execute.Invoke(entry.Param, entry.Result).Subscribe(),
+                    _param, result);
 
                 if (Groups.Any())
                 {
@@ -815,7 +837,7 @@ namespace HistoricalReactiveCommand
             Groups.Push(grouping);
         }
 
-        public void CommitGroup()
+        public void CommitGrouping()
         {
             var group = Groups.Pop();
             this.Context.Snapshot(group.Group());
@@ -841,10 +863,8 @@ namespace HistoricalReactiveCommand
         
         protected override void Dispose(bool disposing)
         {
-            _disposable.Dispose();
             _canExecuteSubscription.Dispose();
             _execute.Dispose();
-   
         }
 
     }

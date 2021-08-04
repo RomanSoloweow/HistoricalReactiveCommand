@@ -739,7 +739,6 @@ namespace HistoricalReactiveCommand
         // private readonly ReactiveCommand<TParam, TResult> _execute;
         
         private readonly ReactiveCommand<TParam, TResult> _execute;
-        private CompositeDisposable _disposable = new();
         private TParam _param;
         // private Func<TParam, TResult, IObservable<TResult>> _execute;
         // private Func<TParam, TResult, IObservable<TResult>> _discard;
@@ -772,8 +771,8 @@ namespace HistoricalReactiveCommand
             _execute.Subscribe(result =>
             {
                 context.Snapshot(new HistoryEntry(
-                    (_)=> discard.Invoke(_param, result).Subscribe().DisposeWith(_disposable),
-                    (_)=> execute.Invoke(_param, result).Subscribe().DisposeWith(_disposable)));
+                    (_)=> discard.Invoke(_param, result).Subscribe(),
+                    (_)=> execute.Invoke(_param, result).Subscribe()));
 
             });
             
@@ -807,7 +806,6 @@ namespace HistoricalReactiveCommand
 
         protected override void Dispose(bool disposing)
         {
-            _disposable.Dispose();
             _canExecuteSubscription.Dispose();
             _execute.Dispose();
    

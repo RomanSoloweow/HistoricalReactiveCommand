@@ -9,8 +9,10 @@ namespace HistoricalReactiveCommand
         public Action Undo { get; }
         public Action Redo { get; }
         public HistoryEntryForGroup(Action<HistoryEntryForGroup<TParam, TResult>> undo, 
-            Action<HistoryEntryForGroup<TParam, TResult>> redo)
+            Action<HistoryEntryForGroup<TParam, TResult>> redo, TParam param, TResult result)
         {
+            Param = param;
+            Result = result;
             Undo = () => undo(this);
             Redo = () => undo(this);
         }
