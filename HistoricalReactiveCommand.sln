@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HistoricalReactiveCommand",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HistoricalReactiveCommand.Tests", "HistoricalReactiveCommand.Tests\HistoricalReactiveCommand.Tests.csproj", "{B42889FE-D242-4F73-A602-F5209E1E39D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HistoricalReactiveCommand.Sandbox", "HistoricalReactiveCommand.Sandbox\HistoricalReactiveCommand.Sandbox.csproj", "{21F3410F-6D6D-4175-B978-63CA33DA14DE}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{B42889FE-D242-4F73-A602-F5209E1E39D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B42889FE-D242-4F73-A602-F5209E1E39D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B42889FE-D242-4F73-A602-F5209E1E39D7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{21F3410F-6D6D-4175-B978-63CA33DA14DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{21F3410F-6D6D-4175-B978-63CA33DA14DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{21F3410F-6D6D-4175-B978-63CA33DA14DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{21F3410F-6D6D-4175-B978-63CA33DA14DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
