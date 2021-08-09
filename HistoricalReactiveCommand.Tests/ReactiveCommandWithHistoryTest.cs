@@ -8,6 +8,7 @@ using HistoricalReactiveCommand.Imports;
 using Xunit;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using ReactiveUI;
 
 namespace HistoricalReactiveCommand.Tests
 {
@@ -85,6 +86,36 @@ namespace HistoricalReactiveCommand.Tests
             //var b = await myTask;
             //_canExecuteSubject.OnCompleted();
             //Assert.Equal(2, canExecuteChanged.Count);    
+
+        }
+
+        [Fact]
+        public async Task CommandRespectCanExecute()
+        {
+           
+            // ICommand fixture = ReactiveCommandWithHistory.CreateWithHistory<Unit>(
+            //     (_) => {
+            //         executed = true;
+            //     },
+            //     (_) => { },
+            //     _canExecuteSubject,
+            //     _scheduler);
+            
+            var executed = false;
+            ICommand fixture = ReactiveCommand.Create<Unit>(
+                (_) => { executed = true;}, _canExecuteSubject);
+            
+            _canExecuteSubject.OnNext(false);
+            fixture.Execute(null);
+            Assert.False(executed);
+            
+            
+            
+            var canExecuteChanged = new List<bool>();
+            fixture.CanExecuteChanged += (s, e) => canExecuteChanged.Add(fixture.CanExecute(null));
+            
+    
+            Assert.Single(canExecuteChanged);
 
         }
     }

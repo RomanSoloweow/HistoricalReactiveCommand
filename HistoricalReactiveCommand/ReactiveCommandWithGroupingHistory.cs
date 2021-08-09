@@ -8,10 +8,8 @@ using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using HistoricalReactiveCommand.Imports;
 using System.Reactive;
-using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
-using DynamicData;
 
 [assembly: InternalsVisibleTo("HistoricalReactiveCommand.Tests")]
 

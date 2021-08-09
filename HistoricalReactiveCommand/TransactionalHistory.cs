@@ -110,11 +110,6 @@ namespace HistoricalReactiveCommand
             UpdateSubjects();
         }
 
-        public void Block()
-        {
-            UpdateSubjects(true);
-        }
-
         #endregion ITransactionalHistory
 
         public void Dispose()

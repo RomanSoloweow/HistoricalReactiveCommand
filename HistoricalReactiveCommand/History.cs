@@ -19,7 +19,6 @@ namespace HistoricalReactiveCommand
         public History(string id)
         {
             Id = id;
-            UpdateSubjects(true);
         }
 
         public string Id { get; }

@@ -5,7 +5,5 @@
         void BeginTransaction(ITransition transition);
         void CommitTransaction();
         void RollbackTransaction();
-
-        void Block();
     }
 }

@@ -735,13 +735,8 @@ namespace HistoricalReactiveCommand
     
     public sealed class ReactiveCommandWithTransactionalHistory<TParam, TResult> : ReactiveCommandBase<TParam, TResult>
     {
-        // private readonly ReactiveCommand<HistoryEntry, TResult> _discard;
-        // private readonly ReactiveCommand<TParam, TResult> _execute;
-        
         private readonly ReactiveCommand<TParam, TResult> _execute;
         private TParam _param;
-        // private Func<TParam, TResult, IObservable<TResult>> _execute;
-        // private Func<TParam, TResult, IObservable<TResult>> _discard;
         private readonly IDisposable _canExecuteSubscription;
         internal ReactiveCommandWithTransactionalHistory(
             Func<TParam, TResult, IObservable<TResult>> execute,
@@ -808,7 +803,6 @@ namespace HistoricalReactiveCommand
         {
             _canExecuteSubscription.Dispose();
             _execute.Dispose();
-   
         }
 
     }
