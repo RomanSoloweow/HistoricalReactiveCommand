@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
+using System.Windows.Input;
 using HistoricalReactiveCommand.Imports;
 using Xunit;
 
@@ -26,9 +27,10 @@ namespace HistoricalReactiveCommand.Tests
                 {
                     return ints.Sum(x => x);
                 });
-                    
+                
                 command.StartGrouping(group);
                 command.Execute(25).Subscribe();
+                var canExecute = (command.History.Undo as ICommand).CanExecute(null);
                 command.Execute(25).Subscribe();
                 command.Execute(25).Subscribe();
                 command.Execute(25).Subscribe();

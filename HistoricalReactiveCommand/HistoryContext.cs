@@ -9,7 +9,7 @@ namespace HistoricalReactiveCommand
 {
     public sealed class HistoryContext: IHistoryContext<IHistory, IHistoryEntry>, IDisposable
     {
-        internal static HistoryContext GetContext(IHistory history, IScheduler? outputScheduler = null)
+        internal static IHistoryContext<IHistory, IHistoryEntry> GetContext(IHistory history, IScheduler? outputScheduler = null)
         {
             if (history == null)
             {
@@ -21,7 +21,7 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(history.Id));
             }
         
-            var context = Locator.Current.GetService<HistoryContext>(history.Id);
+            var context = Locator.Current.GetService<IHistoryContext<IHistory, IHistoryEntry>>(history.Id);
         
             if (context != null)
             {
@@ -33,14 +33,14 @@ namespace HistoricalReactiveCommand
             return context;
         }
 
-        internal static HistoryContext GetContext(string historyId = "", IScheduler? outputScheduler = null)
+        internal static IHistoryContext<IHistory, IHistoryEntry> GetContext(string historyId = "", IScheduler? outputScheduler = null)
         {
             if (historyId == null)
             {
                 throw new ArgumentNullException(nameof(historyId));
             }
         
-            var context = Locator.Current.GetService<HistoryContext>(historyId);
+            var context = Locator.Current.GetService<IHistoryContext<IHistory, IHistoryEntry>>(historyId);
         
             if (context != null)
             {

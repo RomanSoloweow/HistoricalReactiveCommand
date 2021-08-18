@@ -669,7 +669,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, TResult, TResult> execute,
             Func<TParam, TResult, TResult> discard,
-            HistoryContext context,
+            IHistoryContext<IHistory, IHistoryEntry> context,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -709,7 +709,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard,
-            HistoryContext context,
+            IHistoryContext<IHistory, IHistoryEntry> context,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -742,7 +742,7 @@ namespace HistoricalReactiveCommand
         internal ReactiveCommandWithHistory(
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard,
-            HistoryContext context,
+            IHistoryContext<IHistory, IHistoryEntry> context,
             IObservable<bool> canExecute,
             IScheduler outputScheduler)
         {
@@ -776,7 +776,7 @@ namespace HistoricalReactiveCommand
             _canExecuteSubscription = canExecute.Subscribe(OnCanExecuteChanged);
         }
         
-        public HistoryContext History {get; }
+        public IHistoryContext<IHistory, IHistoryEntry> History {get; }
 
         public override IObservable<bool> CanExecute => _execute.CanExecute;
 

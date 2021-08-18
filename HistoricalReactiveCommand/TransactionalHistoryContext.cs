@@ -9,7 +9,7 @@ namespace HistoricalReactiveCommand
 {
     public class TransactionalHistoryContext: ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry>
     {
-        internal static TransactionalHistoryContext GetContext(ITransactionalHistory history, IScheduler? outputScheduler = null)
+        internal static ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> GetContext(ITransactionalHistory history, IScheduler? outputScheduler = null)
         {
             if (history == null)
             {
@@ -21,7 +21,7 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(history.Id));
             }
         
-            var context = Locator.Current.GetService<TransactionalHistoryContext>(history.Id);
+            var context = Locator.Current.GetService<ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry>>(history.Id);
         
             if (context != null)
             {
@@ -29,18 +29,21 @@ namespace HistoricalReactiveCommand
             }
         
             context = new TransactionalHistoryContext(history, outputScheduler ?? RxApp.MainThreadScheduler);
-            Locator.CurrentMutable.RegisterConstant(context, history.Id);
+            
+            Locator.CurrentMutable.RegisterConstant(context, typeof(ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry>), history.Id);
+            Locator.CurrentMutable.RegisterConstant(context, typeof(IHistoryContext<IHistory, IHistoryEntry>), history.Id);
+            
             return context;
         }
 
-        internal static TransactionalHistoryContext GetContext(string historyId = "", IScheduler? outputScheduler = null)
+        internal static ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> GetContext(string historyId = "", IScheduler? outputScheduler = null)
         {
             if (historyId == null)
             {
                 throw new ArgumentNullException(nameof(historyId));
             }
         
-            var context = Locator.Current.GetService<TransactionalHistoryContext>(historyId);
+            var context = Locator.Current.GetService<ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry>>(historyId);
         
             if (context != null)
             {
@@ -48,7 +51,9 @@ namespace HistoricalReactiveCommand
             }
         
             context = new TransactionalHistoryContext(new TransactionalHistory(historyId), outputScheduler ?? RxApp.MainThreadScheduler);
-            Locator.CurrentMutable.RegisterConstant(context, historyId);
+            
+            Locator.CurrentMutable.RegisterConstant(context, typeof(ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry>), historyId);
+            Locator.CurrentMutable.RegisterConstant(context, typeof(IHistoryContext<IHistory, IHistoryEntry>), historyId);
             return context;
         }
         
