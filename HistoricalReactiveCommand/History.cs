@@ -6,11 +6,11 @@ using System.Reactive.Subjects;
 
 namespace HistoricalReactiveCommand
 {
-    public class History: IHistory
+    public class History : IHistory
     {
         private Stack<IHistoryEntry> StackRedo { get; } = new();
         private Stack<IHistoryEntry> StackUndo { get; } = new();
-        
+
         private readonly Subject<bool> _canSnapshot = new();
         private readonly Subject<bool> _canUndo = new();
         private readonly Subject<bool> _canRedo = new();
@@ -27,11 +27,12 @@ namespace HistoricalReactiveCommand
         public IObservable<bool> CanRedo => _canRedo.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanSnapshot => _canSnapshot.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanClear => _canClear.AsObservable().DistinctUntilChanged();
+
         public void Undo()
         {
             if (StackUndo.Count == 0)
                 throw new Exception();
-            
+
             UpdateSubjects(true);
             var entry = StackUndo.Pop();
             entry.Undo.Invoke();
@@ -43,7 +44,7 @@ namespace HistoricalReactiveCommand
         {
             if (StackRedo.Count == 0)
                 throw new Exception();
-            
+
             UpdateSubjects(true);
             var entry = StackRedo.Pop();
             entry.Redo.Invoke();
@@ -71,7 +72,7 @@ namespace HistoricalReactiveCommand
         {
             StackRedo.Clear();
             StackUndo.Clear();
-            
+
             _canUndo.Dispose();
             _canRedo.Dispose();
             _canClear.Dispose();
@@ -89,9 +90,9 @@ namespace HistoricalReactiveCommand
             }
             else
             {
-                var hasUndoEntries = StackUndo.Any(); 
+                var hasUndoEntries = StackUndo.Any();
                 var hasRedoEntries = StackRedo.Any();
-                
+
                 _canUndo.OnNext(hasUndoEntries);
                 _canRedo.OnNext(hasRedoEntries);
                 _canClear.OnNext(hasUndoEntries || hasRedoEntries);

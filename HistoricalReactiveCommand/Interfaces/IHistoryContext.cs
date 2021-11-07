@@ -5,8 +5,8 @@ using ReactiveUI;
 namespace HistoricalReactiveCommand
 {
     public interface IHistoryContext<out THistory, in THistoryEntry>
-    where THistory: IHistory
-    where THistoryEntry: IHistoryEntry
+        where THistory : IHistory
+        where THistoryEntry : IHistoryEntry
     {
         THistory History { get; }
         IObservable<bool> CanSnapshot { get; }
