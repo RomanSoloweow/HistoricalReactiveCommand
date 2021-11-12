@@ -33,6 +33,4 @@ The creation and logic of work is as similar as possible to conventional [reacti
 
 ## License📑
 
-Copyright (c) SimpleStateMachine
-
 Licensed under the [MIT](LICENSE) license.
