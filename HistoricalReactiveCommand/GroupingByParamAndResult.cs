@@ -4,24 +4,23 @@ using System.Linq;
 
 namespace HistoricalReactiveCommand
 {
-    public class GroupingByParamAndResult<TParam, TResult> : IGrouping<TParam, TResult>
+    public class GroupingByParamAndResult<TParam, TResult>:IGrouping<TParam, TResult>
     {
         private readonly Func<TParam, TResult, IObservable<TResult>> _execute;
         private readonly Func<TParam, TResult, IObservable<TResult>> _discard;
         private readonly Func<List<(TParam, TResult)>, (TParam, TResult)> _groupingAction;
         private readonly List<IHistoryEntryForGroup<TParam, TResult>> _groups = new();
         public bool IsEmpty => !_groups.Any();
-
         public GroupingByParamAndResult(
             Func<TParam, TResult, IObservable<TResult>> execute,
-            Func<TParam, TResult, IObservable<TResult>> discard,
+            Func<TParam, TResult, IObservable<TResult>> discard, 
             Func<List<(TParam, TResult)>, (TParam, TResult)> groupingAction)
         {
             _execute = execute;
             _discard = discard;
             _groupingAction = groupingAction;
         }
-
+        
         public void Append(IHistoryEntryForGroup<TParam, TResult> entry)
         {
             _groups.Add(entry);
@@ -33,8 +32,8 @@ namespace HistoricalReactiveCommand
                 x => (x.Param, x.Result)).ToList();
             var (param, result) = _groupingAction(parameters);
             return new HistoryEntry(
-                (entry) => { _discard(param, result).Subscribe(); },
-                (entry) => { _execute(param, result).Subscribe(); });
+                (entry) => { _discard(param, result).Subscribe();},
+                (entry) => { _execute(param, result).Subscribe();});
         }
 
         public void Rollback()

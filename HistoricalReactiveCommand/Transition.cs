@@ -3,10 +3,9 @@ using System.Linq;
 
 namespace HistoricalReactiveCommand
 {
-    public class Transition : ITransition
+    public class Transition:ITransition
     {
         private List<IHistoryEntry> Operations { get; } = new();
-
         public void Append(IHistoryEntry entry)
         {
             Operations.Add(entry);
