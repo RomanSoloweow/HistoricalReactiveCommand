@@ -17,6 +17,10 @@ namespace HistoricalReactiveCommand
         private readonly Subject<bool> _canUndo = new Subject<bool>();
         private readonly Subject<bool> _canRedo = new Subject<bool>();
         private readonly Subject<bool> _canClear = new Subject<bool>();
+        /// <summary>
+        /// Можно ли добавлять вложенные команды в стек
+        /// </summary>
+        public bool CanAddInternalCommand { get; set; } = true;
 
         public History(string id)
         {
@@ -40,6 +44,7 @@ namespace HistoricalReactiveCommand
             {
                 StackRedo.Push(entry);
                 UpdateSubjects();
+                CanAddInternalCommand = true;
             });
         }
 
@@ -53,6 +58,7 @@ namespace HistoricalReactiveCommand
             {
                 StackUndo.Push(entry);
                 UpdateSubjects();
+                CanAddInternalCommand = true;
             });
         }
 
