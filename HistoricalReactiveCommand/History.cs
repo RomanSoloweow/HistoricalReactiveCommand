@@ -76,6 +76,14 @@ namespace HistoricalReactiveCommand
             return Observables.Unit;
         }
 
+        public void Add(HistoryEntry entry)
+        {
+            StackRedo.Clear();
+            UpdateSubjects(true);
+            StackUndo.Push(entry);
+            UpdateSubjects();
+        }
+
         public void Dispose()
         {
             StackRedo.Clear();

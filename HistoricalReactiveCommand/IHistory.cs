@@ -14,6 +14,7 @@ namespace HistoricalReactiveCommand
         IObservable<HistoryEntry> Undo(Func<HistoryEntry, IObservable<HistoryEntry>> discard);
         IObservable<HistoryEntry> Redo(Func<HistoryEntry, IObservable<HistoryEntry>> execute);
         IObservable<HistoryEntry> Record(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute);
+        void Add(HistoryEntry entry);
         IObservable<Unit> Clear();
     }
 }

@@ -7,5 +7,6 @@ namespace HistoricalReactiveCommand
     {
         IObservable<HistoryEntry> Execute(HistoryEntry entry);
         IObservable<HistoryEntry> Discard(HistoryEntry entry);
+        void AddHistoryRecord(dynamic param);
     }
 }

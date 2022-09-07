@@ -823,6 +823,17 @@ namespace HistoricalReactiveCommand
             return Execute(default!);
         }
 
+        /// <summary>
+        /// Добавление в историю команд
+        /// </summary>
+        /// <param name="parameter">Параметры</param>
+        public void AddHistoryRecord(TParam parameter = default)
+        {
+            var historyEntry = new HistoryEntry(parameter, default(TResult), _commandKey);
+            var withHistory = this as IReactiveCommandWithHistory;
+            History.Record(historyEntry);
+        }
+
         protected override void Dispose(bool disposing)
         {
             _canExecuteSubscription.Dispose();
@@ -844,6 +855,11 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentException($"Received {entry.CommandKey} command key instead of {_commandKey}");
 
             return _discard.Execute(entry).Select(result => { entry.Result = result; return entry; });
+        }
+
+        void IReactiveCommandWithHistory.AddHistoryRecord(dynamic parameter)
+        {
+             AddHistoryRecord((TParam)parameter);
         }
     }
 }
