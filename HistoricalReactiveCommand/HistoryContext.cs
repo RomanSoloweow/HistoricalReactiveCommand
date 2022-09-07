@@ -90,6 +90,13 @@ namespace HistoricalReactiveCommand
 
         public IObservable<bool> CanRecord => _history.CanRecord;
 
+        public HistoryEntry LastCommand()
+        {
+            return _history.LastCommand();
+        }
+
+        public DateTime LastCommandTime => _history.LastCommandTime;
+
         public ReactiveCommand<Unit, HistoryEntry> Undo { get; }
         
         public ReactiveCommand<Unit, HistoryEntry> Redo { get; }
@@ -125,5 +132,10 @@ namespace HistoricalReactiveCommand
                 _history.Add(entry);
             }
         }
+
+        /// <summary>
+        /// Удление верхнего элемента
+        /// </summary>
+        public void UndoPop() => _history.UndoPop();
     }
 }
