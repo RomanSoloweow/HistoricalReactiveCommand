@@ -823,6 +823,50 @@ namespace HistoricalReactiveCommand
             return Execute(default!);
         }
 
+        /// <summary>
+        /// Добавление в историю команд
+        /// </summary>
+        /// <param name="parameter">Параметры</param>
+        public void AddHistoryRecord(TParam parameter = default)
+        {
+            var historyEntry = new HistoryEntry(parameter, default(TResult), _commandKey);
+            var withHistory = this as IReactiveCommandWithHistory;
+            History.Record(historyEntry);
+        }
+
+        /// <summary>
+        /// Добавление в историю команд с обновление параметров последней команды
+        /// </summary>
+        /// <param name="parameter">Параметры</param>
+        private void Merge(TParam parameter = default)
+        {
+            var historyEntry = new HistoryEntry(parameter, default(TResult), _commandKey);
+            History.UndoPop();
+            History.Record(historyEntry);
+        }
+
+        /// <summary>
+        /// Добавление или обновление команды
+        /// </summary>
+        /// <param name="param">Параметры</param>
+        /// <param name="checkOutFunc">Функция проверки возможности слияния команд</param>
+        /// <param name="mergeFunc">Функция слияния команд</param>
+        public void MergeOrAdd(TParam param, Func<dynamic, dynamic, bool> checkOutFunc, Func<dynamic, dynamic, dynamic> mergeFunc)
+        {
+            var prevCommand = History.LastCommand();
+            if (prevCommand.CommandKey == _commandKey 
+                && prevCommand.CreationtTime == History.LastCommandTime
+                && History.LastCommandTime.AddSeconds(10) > DateTime.UtcNow
+                && checkOutFunc(param!, prevCommand.Parameter))
+            {
+                Merge(mergeFunc(param!, prevCommand.Parameter));
+            }
+            else
+            {
+                AddHistoryRecord(param);
+            }
+        }
+
         protected override void Dispose(bool disposing)
         {
             _canExecuteSubscription.Dispose();
@@ -844,6 +888,16 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentException($"Received {entry.CommandKey} command key instead of {_commandKey}");
 
             return _discard.Execute(entry).Select(result => { entry.Result = result; return entry; });
+        }
+
+        void IReactiveCommandWithHistory.AddHistoryRecord(dynamic parameter)
+        {
+             AddHistoryRecord((TParam)parameter);
+        }
+
+        void IReactiveCommandWithHistory.MergeOrAdd(dynamic param, Func<dynamic,dynamic, bool> checkOutFunc, Func<dynamic, dynamic, dynamic> mergeFunc)
+        {
+            MergeOrAdd((TParam)param, checkOutFunc,mergeFunc);
         }
     }
 }

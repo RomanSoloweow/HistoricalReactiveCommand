@@ -12,11 +12,26 @@ namespace HistoricalReactiveCommand
     {
         private Stack<HistoryEntry> StackRedo { get; } = new Stack<HistoryEntry>();
         private Stack<HistoryEntry> StackUndo { get; } = new Stack<HistoryEntry>();
-        
+
+        public HistoryEntry LastCommand()
+        {
+            return StackUndo.Peek();
+        }
+
         private readonly Subject<bool> _canRecord = new Subject<bool>();
         private readonly Subject<bool> _canUndo = new Subject<bool>();
         private readonly Subject<bool> _canRedo = new Subject<bool>();
         private readonly Subject<bool> _canClear = new Subject<bool>();
+
+        /// <summary>
+        /// Время последней добавленной команды
+        /// </summary>
+        /// <remarks>Время именно добавленной команды, а не из стека</remarks>
+        public DateTime LastCommandTime { get; set; }
+        /// <summary>
+        /// Можно ли добавлять вложенные команды в стек
+        /// </summary>
+        public bool CanAddInternalCommand { get; set; } = true;
 
         public History(string id)
         {
@@ -40,6 +55,7 @@ namespace HistoricalReactiveCommand
             {
                 StackRedo.Push(entry);
                 UpdateSubjects();
+                CanAddInternalCommand = true;
             });
         }
 
@@ -53,6 +69,7 @@ namespace HistoricalReactiveCommand
             {
                 StackUndo.Push(entry);
                 UpdateSubjects();
+                CanAddInternalCommand = true;
             });
         }
 
@@ -63,6 +80,7 @@ namespace HistoricalReactiveCommand
             return execute(entry).Do(updatedEntry =>
             {
                 StackUndo.Push(updatedEntry);
+                LastCommandTime = entry.CreationtTime;
                 UpdateSubjects();
             });
         }
@@ -74,6 +92,20 @@ namespace HistoricalReactiveCommand
             StackUndo.Clear();
             UpdateSubjects();
             return Observables.Unit;
+        }
+
+        public void Add(HistoryEntry entry)
+        {
+            StackRedo.Clear();
+            UpdateSubjects(true);
+            StackUndo.Push(entry);
+            LastCommandTime = entry.CreationtTime;
+            UpdateSubjects();
+        }
+
+        public void UndoPop()
+        {
+            StackUndo.Pop();
         }
 
         public void Dispose()

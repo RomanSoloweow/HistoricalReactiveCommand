@@ -62,7 +62,11 @@ namespace HistoricalReactiveCommand
                 .CombineLatest(history.CanUndo, (recordable, executable) => recordable && executable);
 
             Undo = ReactiveCommand.CreateFromObservable<Unit, HistoryEntry>(
-                unit => history.Undo(entry => ResolveCommand(entry).Discard(entry)),
+                unit => history.Undo(entry =>
+                {
+                    history.CanAddInternalCommand = false;
+                    return ResolveCommand(entry).Discard(entry);
+                }),
                 CanUndo, 
                 outputScheduler);
 
@@ -70,7 +74,11 @@ namespace HistoricalReactiveCommand
                 .CombineLatest(history.CanRedo, (recordable, executable) => recordable && executable);
 
             Redo = ReactiveCommand.CreateFromObservable<Unit, HistoryEntry>(
-                unit => history.Redo(entry => ResolveCommand(entry).Execute(entry)),
+                unit => history.Redo(entry =>
+                {
+                    history.CanAddInternalCommand = false;
+                    return ResolveCommand(entry).Execute(entry);
+                }),
                 CanRedo,
                 outputScheduler);
             
@@ -81,6 +89,13 @@ namespace HistoricalReactiveCommand
         }
 
         public IObservable<bool> CanRecord => _history.CanRecord;
+
+        public HistoryEntry LastCommand()
+        {
+            return _history.LastCommand();
+        }
+
+        public DateTime LastCommandTime => _history.LastCommandTime;
 
         public ReactiveCommand<Unit, HistoryEntry> Undo { get; }
         
@@ -109,5 +124,18 @@ namespace HistoricalReactiveCommand
         }
 
         internal IObservable<HistoryEntry> Record(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute) => _history.Record(entry, execute);
+
+        internal void Record(HistoryEntry entry)
+        {
+            if (_history.CanAddInternalCommand)
+            {
+                _history.Add(entry);
+            }
+        }
+
+        /// <summary>
+        /// Удление верхнего элемента
+        /// </summary>
+        public void UndoPop() => _history.UndoPop();
     }
 }
