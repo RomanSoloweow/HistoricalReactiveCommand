@@ -2,14 +2,19 @@
 
 namespace HistoricalReactiveCommand
 {
-    public class HistoryEntryForGroup<TParam, TResult>:IHistoryEntryForGroup<TParam, TResult>
+    public class HistoryEntryForGroup<TParam, TResult> : IHistoryEntryForGroup<TParam, TResult>
     {
         public TParam Param { get; }
         public TResult Result { get; }
         public Action Undo { get; }
         public Action Redo { get; }
-        public HistoryEntryForGroup(Action<HistoryEntryForGroup<TParam, TResult>> undo, 
-            Action<HistoryEntryForGroup<TParam, TResult>> redo, TParam param, TResult result)
+        
+        public HistoryEntryForGroup
+        (
+            Action<HistoryEntryForGroup<TParam, TResult>> undo, 
+            Action<HistoryEntryForGroup<TParam, TResult>> redo,
+            TParam param, TResult result
+        )
         {
             Param = param;
             Result = result;

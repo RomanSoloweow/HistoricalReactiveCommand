@@ -4,12 +4,12 @@ using System.Linq;
 
 namespace HistoricalReactiveCommand
 {
-    public class GroupingAsEntry<TParam, TResult>:IGrouping<TParam, TResult>
+    public class GroupingAsEntry<TParam, TResult> : IGrouping<TParam, TResult>
     {
-        
-        private readonly Func<List<IHistoryEntryForGroup<TParam, TResult>>, IHistoryEntry> _groupingAction;
+        private readonly Func<List<IHistoryEntryForGroup<TParam, TResult>>, IHistoryEntryForGroup<TParam, TResult>> _groupingAction;
         private readonly List<IHistoryEntryForGroup<TParam, TResult>> _groups = new();
-        public GroupingAsEntry(Func<List<IHistoryEntryForGroup<TParam, TResult>>, IHistoryEntry> groupingAction)
+        
+        public GroupingAsEntry(Func<List<IHistoryEntryForGroup<TParam, TResult>>, IHistoryEntryForGroup<TParam, TResult>> groupingAction)
         {
             _groupingAction = groupingAction;
         }
@@ -19,7 +19,7 @@ namespace HistoricalReactiveCommand
             _groups.Add(entry);
         }
 
-        public IHistoryEntry Group()
+        public IHistoryEntryForGroup<TParam, TResult> Group()
         {
            return _groupingAction(_groups);
         }

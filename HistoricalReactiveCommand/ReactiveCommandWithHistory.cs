@@ -279,7 +279,7 @@ namespace HistoricalReactiveCommand
                           observer.OnCompleted();
                           return new CompositeDisposable();
                       }),
-                  HistoryContext.GetContext(historyId, outputScheduler),
+                  HistoryContext.GetContext<TParam, TResult>(historyId, outputScheduler),
                   canExecute ?? Observables.True,
                   outputScheduler ?? RxApp.MainThreadScheduler);
         }
@@ -307,7 +307,7 @@ namespace HistoricalReactiveCommand
 
             return new ReactiveCommandWithHistory<TParam, TResult>(
                  execute, discard,
-                HistoryContext.GetContext(historyId, outputScheduler),
+                HistoryContext.GetContext<TParam, TResult>(historyId, outputScheduler),
                 canExecute ?? Observables.True,
                 outputScheduler ?? RxApp.MainThreadScheduler);
         }
@@ -315,7 +315,7 @@ namespace HistoricalReactiveCommand
         public static ReactiveCommandWithHistory<TParam, TResult> CreateWithHistoryFromTask<TParam, TResult>(
             Func<TParam, TResult, CancellationToken, Task<TResult>> execute,
             Func<TParam, TResult, CancellationToken, Task<TResult>> discard,
-            IHistory history,
+            IHistory<TParam, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -343,7 +343,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, TResult, Task<TResult>> execute,
             Func<TParam, TResult, Task<TResult>> discard,
-            IHistory history,
+            IHistory<TParam, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -370,7 +370,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, Task> execute,
             Func<TParam, Task> discard,
-            IHistory history,
+            IHistory<TParam, Unit> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -397,7 +397,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, CancellationToken, Task> execute,
             Func<TParam, CancellationToken, Task> discard,
-            IHistory history,
+            IHistory<TParam, Unit> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -424,7 +424,7 @@ namespace HistoricalReactiveCommand
             
             Func<Task> execute,
             Func<Task> discard,
-            IHistory history,
+            IHistory<Unit, Unit> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -451,7 +451,7 @@ namespace HistoricalReactiveCommand
             
             Func<CancellationToken, Task> execute,
             Func<CancellationToken, Task> discard,
-            IHistory history,
+            IHistory<Unit, Unit> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -478,7 +478,7 @@ namespace HistoricalReactiveCommand
             
             Func<TResult, Task<TResult>> execute,
             Func<TResult, Task<TResult>> discard,
-            IHistory history,
+            IHistory<Unit, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -505,7 +505,7 @@ namespace HistoricalReactiveCommand
             
             Func<TResult, CancellationToken, Task<TResult>> execute,
             Func<TResult, CancellationToken, Task<TResult>> discard,
-            IHistory history,
+            IHistory<Unit, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -532,7 +532,7 @@ namespace HistoricalReactiveCommand
             
             Action<TParam> execute,
             Action<TParam> discard,
-            IHistory history,
+            IHistory<TParam, Unit> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -560,7 +560,7 @@ namespace HistoricalReactiveCommand
             
             Action execute,
             Action discard,
-            IHistory history,
+            IHistory<Unit, Unit> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -588,7 +588,7 @@ namespace HistoricalReactiveCommand
             
             Func<TResult, TResult> execute,
             Func<TResult, TResult> discard,
-            IHistory history,
+            IHistory<Unit, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -615,7 +615,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, TResult, TResult> execute,
             Func<TParam, TResult, TResult> discard,
-            IHistory history,
+            IHistory<TParam, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -642,7 +642,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard,
-            IHistory history,
+            IHistory<TParam, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -669,7 +669,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, TResult, TResult> execute,
             Func<TParam, TResult, TResult> discard,
-            IHistoryContext<IHistory, IHistoryEntry> context,
+            IHistoryContext<TParam, TResult, IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> context,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -709,7 +709,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard,
-            IHistoryContext<IHistory, IHistoryEntry> context,
+            IHistoryContext<TParam, TResult, IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> context,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -743,7 +743,7 @@ namespace HistoricalReactiveCommand
         internal ReactiveCommandWithHistory(
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard,
-            IHistoryContext<IHistory, IHistoryEntry> context,
+            IHistoryContext<TParam, TResult, IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> context,
             IObservable<bool> canExecute,
             IScheduler outputScheduler)
         {
@@ -777,7 +777,7 @@ namespace HistoricalReactiveCommand
             _canExecuteSubscription = canExecute.Subscribe(OnCanExecuteChanged);
         }
         
-        public IHistoryContext<IHistory, IHistoryEntry> History {get; }
+        public IHistoryContext<TParam, TResult, IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> History {get; }
 
         public override IObservable<bool> CanExecute => _execute.CanExecute;
 
@@ -808,11 +808,12 @@ namespace HistoricalReactiveCommand
    
         }
         
-        public HistoryEntry CreateHistoryEntry(TParam param, TResult result)
+        public HistoryEntry<TParam, TResult> CreateHistoryEntry(TParam param, TResult result)
         {
-            return new HistoryEntry(
+            return new HistoryEntry<TParam, TResult>(
                 (_) => discardAction.Invoke(param, result).Subscribe(),
-                (_) => executeAction.Invoke(param, result).Subscribe());
+                (_) => executeAction.Invoke(param, result).Subscribe(),
+                param, result);
         }
         
     }

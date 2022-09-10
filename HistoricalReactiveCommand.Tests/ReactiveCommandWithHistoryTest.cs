@@ -64,7 +64,6 @@ namespace HistoricalReactiveCommand.Tests
         [Fact]
         public async Task CanExecuteChangeOnExecutingCommandAsync()
         {
-
             ICommand fixture = ReactiveCommandWithHistory.CreateWithHistoryFromObservable<Unit, Unit>(
               (parameter, result) => Observables.Unit,
               (parameter, result) => Observables.Unit,

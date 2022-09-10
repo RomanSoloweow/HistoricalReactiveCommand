@@ -279,7 +279,7 @@ namespace HistoricalReactiveCommand
                           observer.OnCompleted();
                           return new CompositeDisposable();
                       }),
-                  TransactionalHistoryContext.GetContext(historyId, outputScheduler),
+                  TransactionalHistoryContext.GetContext<TParam, TResult>(historyId, outputScheduler),
                   canExecute ?? Observables.True,
                   outputScheduler ?? RxApp.MainThreadScheduler);
         }
@@ -307,7 +307,7 @@ namespace HistoricalReactiveCommand
 
             return new ReactiveCommandWithTransactionalHistory<TParam, TResult>(
                  execute, discard,
-                TransactionalHistoryContext.GetContext(historyId, outputScheduler),
+                TransactionalHistoryContext.GetContext<TParam, TResult>(historyId, outputScheduler),
                 canExecute ?? Observables.True,
                 outputScheduler ?? RxApp.MainThreadScheduler);
         }
@@ -315,7 +315,7 @@ namespace HistoricalReactiveCommand
         public static ReactiveCommandWithTransactionalHistory<TParam, TResult> CreateWithHistoryFromTask<TParam, TResult>(
             Func<TParam, TResult, CancellationToken, Task<TResult>> execute,
             Func<TParam, TResult, CancellationToken, Task<TResult>> discard,
-            ITransactionalHistory history,
+            ITransactionalHistory<TParam, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -333,7 +333,7 @@ namespace HistoricalReactiveCommand
             }
 
 
-            return CreateWithHistoryFromObservable<TParam, TResult>(
+            return CreateWithHistoryFromObservable(
                 (param,result) => Observable.StartAsync(ct => execute(param, result, ct)),
                 (param, result) => Observable.StartAsync(ct => discard(param, result, ct)),
                 history, canExecute, outputScheduler);
@@ -343,7 +343,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, TResult, Task<TResult>> execute,
             Func<TParam, TResult, Task<TResult>> discard,
-            ITransactionalHistory history,
+            ITransactionalHistory<TParam, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -360,7 +360,7 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(execute));
             }
 
-            return CreateWithHistoryFromObservable<TParam, TResult>(
+            return CreateWithHistoryFromObservable(
                     (param, result) => Observable.StartAsync(ct => execute(param, result)),
                     (param, result) => Observable.StartAsync(ct => discard(param, result)),
                      history, canExecute, outputScheduler);
@@ -370,7 +370,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, Task> execute,
             Func<TParam, Task> discard,
-            ITransactionalHistory history,
+            ITransactionalHistory<TParam, Unit> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -387,7 +387,7 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(execute));
             }
 
-            return CreateWithHistoryFromObservable<TParam, Unit>(
+            return CreateWithHistoryFromObservable(
                 (param, result) => Observable.StartAsync(ct => execute(param)),
                 (param, result) => Observable.StartAsync(ct => discard(param)),
                 history, canExecute, outputScheduler);
@@ -397,7 +397,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, CancellationToken, Task> execute,
             Func<TParam, CancellationToken, Task> discard,
-            ITransactionalHistory history,
+            ITransactionalHistory<TParam, Unit> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -414,7 +414,7 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(execute));
             }
 
-            return CreateWithHistoryFromObservable<TParam, Unit>(
+            return CreateWithHistoryFromObservable(
                 (param, result) => Observable.StartAsync(ct => execute(param, ct)),
                 (param, result) => Observable.StartAsync(ct => discard(param, ct)),
                 history, canExecute, outputScheduler);
@@ -424,7 +424,7 @@ namespace HistoricalReactiveCommand
             
             Func<Task> execute,
             Func<Task> discard,
-            ITransactionalHistory history,
+            ITransactionalHistory<Unit, Unit> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -441,7 +441,7 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(execute));
             }
 
-            return CreateWithHistoryFromObservable<Unit, Unit>(
+            return CreateWithHistoryFromObservable(
                     (param, result) => Observable.StartAsync(ct => execute()),
                     (param, result) => Observable.StartAsync(ct => discard()),
                     history, canExecute, outputScheduler);
@@ -451,7 +451,7 @@ namespace HistoricalReactiveCommand
             
             Func<CancellationToken, Task> execute,
             Func<CancellationToken, Task> discard,
-            ITransactionalHistory history,
+            ITransactionalHistory<Unit, Unit> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -468,7 +468,7 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(execute));
             }
 
-            return CreateWithHistoryFromObservable<Unit, Unit>(
+            return CreateWithHistoryFromObservable(
                 (param, result) => Observable.StartAsync(ct => execute(ct)),
                 (param, result) => Observable.StartAsync(ct => discard(ct)),
                 history, canExecute, outputScheduler);
@@ -478,7 +478,7 @@ namespace HistoricalReactiveCommand
             
             Func<TResult, Task<TResult>> execute,
             Func<TResult, Task<TResult>> discard,
-            ITransactionalHistory history,
+            ITransactionalHistory<Unit, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -495,7 +495,7 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(execute));
             }
 
-            return CreateWithHistoryFromObservable<Unit, TResult>(
+            return CreateWithHistoryFromObservable(
                 (param, result) => Observable.StartAsync(ct => execute(result)),
                 (param, result) => Observable.StartAsync(ct => discard(result)),
                 history, canExecute, outputScheduler);
@@ -505,7 +505,7 @@ namespace HistoricalReactiveCommand
             
             Func<TResult, CancellationToken, Task<TResult>> execute,
             Func<TResult, CancellationToken, Task<TResult>> discard,
-            ITransactionalHistory history,
+            ITransactionalHistory<Unit, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -522,7 +522,7 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(execute));
             }
 
-            return CreateWithHistoryFromObservable<Unit, TResult>(
+            return CreateWithHistoryFromObservable(
                 (param, result) => Observable.StartAsync(ct => execute(result, ct)),
                 (param, result) => Observable.StartAsync(ct => discard(result, ct)),
                 history, canExecute, outputScheduler);
@@ -532,7 +532,7 @@ namespace HistoricalReactiveCommand
             
             Action<TParam> execute,
             Action<TParam> discard,
-            ITransactionalHistory history,
+            ITransactionalHistory<TParam, Unit> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -549,7 +549,7 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(execute));
             }
 
-            return CreateWithHistory<TParam, Unit>(
+            return CreateWithHistory(
                 (param, result) => { execute(param); return Unit.Default; },
                 (param, result) => { discard(param); return Unit.Default; },
                 history,canExecute, outputScheduler);
@@ -560,7 +560,7 @@ namespace HistoricalReactiveCommand
             
             Action execute,
             Action discard,
-            ITransactionalHistory history,
+            ITransactionalHistory<Unit, Unit> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -577,7 +577,7 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(execute));
             }
 
-            return CreateWithHistory<Unit, Unit>(
+            return CreateWithHistory(
                     (param, result) => { execute(); return Unit.Default;},
                     (param, result) => { discard(); return Unit.Default; },
                     history, canExecute, outputScheduler);
@@ -588,7 +588,7 @@ namespace HistoricalReactiveCommand
             
             Func<TResult, TResult> execute,
             Func<TResult, TResult> discard,
-            ITransactionalHistory history,
+            ITransactionalHistory<Unit, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -605,7 +605,7 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(execute));
             }
 
-            return CreateWithHistory<Unit, TResult>(
+            return CreateWithHistory(
                 (param, result)=> execute(result),
                 (param, result) => discard(result),
                 history, canExecute, outputScheduler);
@@ -615,7 +615,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, TResult, TResult> execute,
             Func<TParam, TResult, TResult> discard,
-            ITransactionalHistory history,
+            ITransactionalHistory<TParam, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -642,7 +642,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard,
-            ITransactionalHistory history,
+            ITransactionalHistory<TParam, TResult> history,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -669,7 +669,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, TResult, TResult> execute,
             Func<TParam, TResult, TResult> discard,
-            ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> context,
+            ITransactionalHistoryContext<TParam, TResult, ITransactionalHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> context,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -709,7 +709,7 @@ namespace HistoricalReactiveCommand
             
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard,
-            ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> context,
+            ITransactionalHistoryContext<TParam, TResult, ITransactionalHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> context,
             IObservable<bool>? canExecute = null,
             IScheduler? outputScheduler = null)
         {
@@ -743,7 +743,7 @@ namespace HistoricalReactiveCommand
         internal ReactiveCommandWithTransactionalHistory(
             Func<TParam, TResult, IObservable<TResult>> execute,
             Func<TParam, TResult, IObservable<TResult>> discard,
-            ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> history,
+            ITransactionalHistoryContext<TParam, TResult, ITransactionalHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> history,
             IObservable<bool> canExecute,
             IScheduler outputScheduler)
         {
@@ -777,7 +777,7 @@ namespace HistoricalReactiveCommand
             _canExecuteSubscription = canExecute.Subscribe(OnCanExecuteChanged);
         }
         
-        public ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> History {get; }
+        public ITransactionalHistoryContext<TParam, TResult, ITransactionalHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> History {get; }
 
         public override IObservable<bool> CanExecute => _execute.CanExecute;
 
@@ -807,11 +807,12 @@ namespace HistoricalReactiveCommand
             _execute.Dispose();
         }
         
-        public HistoryEntry CreateHistoryEntry(TParam param, TResult result)
+        public HistoryEntry<TParam, TResult> CreateHistoryEntry(TParam param, TResult result)
         {
-            return new HistoryEntry(
+            return new HistoryEntry<TParam, TResult>(
                 (_) => discardAction.Invoke(param, result).Subscribe(),
-                (_) => executeAction.Invoke(param, result).Subscribe());
+                (_) => executeAction.Invoke(param, result).Subscribe(),
+                param, result);
         }
 
     }

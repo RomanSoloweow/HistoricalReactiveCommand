@@ -7,9 +7,9 @@ using Splat;
 
 namespace HistoricalReactiveCommand
 {
-    public class TransactionalHistoryContext: ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry>
+    public static class TransactionalHistoryContext
     {
-        internal static ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> GetContext(ITransactionalHistory history, IScheduler? outputScheduler = null)
+        internal static ITransactionalHistoryContext<TParam, TResult, ITransactionalHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> GetContext<TParam, TResult>(ITransactionalHistory<TParam, TResult> history, IScheduler? outputScheduler = null)
         {
             if (history == null)
             {
@@ -21,43 +21,46 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(history.Id));
             }
         
-            var context = Locator.Current.GetService<ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry>>(history.Id);
+            var context = Locator.Current.GetService<ITransactionalHistoryContext<TParam, TResult, ITransactionalHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>>>(history.Id);
         
             if (context != null)
             {
                 return context;
             }
         
-            context = new TransactionalHistoryContext(history, outputScheduler ?? RxApp.MainThreadScheduler);
+            context = new TransactionalHistoryContext<TParam, TResult>(history, outputScheduler ?? RxApp.MainThreadScheduler);
             
-            Locator.CurrentMutable.RegisterConstant(context, typeof(ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry>), history.Id);
-            Locator.CurrentMutable.RegisterConstant(context, typeof(IHistoryContext<IHistory, IHistoryEntry>), history.Id);
+            Locator.CurrentMutable.RegisterConstant(context, typeof(ITransactionalHistoryContext<TParam, TResult,ITransactionalHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>>), history.Id);
+            Locator.CurrentMutable.RegisterConstant(context, typeof(IHistoryContext<TParam, TResult,IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>>), history.Id);
             
             return context;
         }
 
-        internal static ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> GetContext(string historyId = "", IScheduler? outputScheduler = null)
+        internal static ITransactionalHistoryContext<TParam, TResult, ITransactionalHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> GetContext<TParam, TResult>(string historyId = "", IScheduler? outputScheduler = null)
         {
             if (historyId == null)
             {
                 throw new ArgumentNullException(nameof(historyId));
             }
         
-            var context = Locator.Current.GetService<ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry>>(historyId);
+            var context = Locator.Current.GetService<ITransactionalHistoryContext<TParam, TResult, ITransactionalHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>>>(historyId);
         
             if (context != null)
             {
                 return context;
             }
         
-            context = new TransactionalHistoryContext(new TransactionalHistory(historyId), outputScheduler ?? RxApp.MainThreadScheduler);
+            context = new TransactionalHistoryContext<TParam, TResult>(new TransactionalHistory<TParam, TResult>(historyId), outputScheduler ?? RxApp.MainThreadScheduler);
             
-            Locator.CurrentMutable.RegisterConstant(context, typeof(ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry>), historyId);
-            Locator.CurrentMutable.RegisterConstant(context, typeof(IHistoryContext<IHistory, IHistoryEntry>), historyId);
+            Locator.CurrentMutable.RegisterConstant(context, typeof(ITransactionalHistoryContext<TParam, TResult, ITransactionalHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>>), historyId);
+            Locator.CurrentMutable.RegisterConstant(context, typeof(IHistoryContext<TParam, TResult, IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>>), historyId);
             return context;
         }
-        
-        internal TransactionalHistoryContext(ITransactionalHistory history, IScheduler outputScheduler)
+    }
+    
+    public class TransactionalHistoryContext<TParam, TResult> : ITransactionalHistoryContext<TParam, TResult, ITransactionalHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>>
+    {
+        internal TransactionalHistoryContext(ITransactionalHistory<TParam, TResult> history, IScheduler outputScheduler)
         {
             History = history;
         
@@ -74,13 +77,13 @@ namespace HistoricalReactiveCommand
             Clear = ReactiveCommand.Create(history.Clear, history.CanClear, outputScheduler);
         }
         
-        public ITransactionalHistory History { get; }
+        public ITransactionalHistory<TParam, TResult> History { get; }
         public ReactiveCommand<Unit, Unit> Undo { get; }
         public ReactiveCommand<Unit, Unit> Redo { get; }
         public ReactiveCommand<Unit, Unit> Clear { get; }
         public IObservable<bool> CanSnapshot => History.CanSnapshot;
-        public void Snapshot(IHistoryEntry entry) => History.Snapshot(entry);
-        public void BeginTransaction(ITransition transition) => History.BeginTransaction(transition);
+        public void Snapshot(IHistoryEntry<TParam, TResult> entry) => History.Snapshot(entry);
+        public void BeginTransaction(ITransaction<TParam, TResult> transaction) => History.BeginTransaction(transaction);
         public void CommitTransaction() => History.CommitTransaction();
         public void RollbackTransaction() => History.RollbackTransaction();
         

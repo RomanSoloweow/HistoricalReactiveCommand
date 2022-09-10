@@ -2,7 +2,7 @@
 
 namespace HistoricalReactiveCommand
 {
-    public interface IHistory: IDisposable
+    public interface IHistory<in TParam, in TResult>: IDisposable
     {
         string Id { get; }
         IObservable<bool> CanUndo { get; }
@@ -12,7 +12,7 @@ namespace HistoricalReactiveCommand
         
         void Undo();
         void Redo();
-        void Snapshot(IHistoryEntry entry);
+        void Snapshot(IHistoryEntry<TParam, TResult> entry);
         void Clear();
 
     }

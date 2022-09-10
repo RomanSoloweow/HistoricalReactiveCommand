@@ -1,10 +1,12 @@
 ﻿namespace HistoricalReactiveCommand
 {
-    public interface ITransactionalHistoryContext<out THistory, in THistoryEntry>:IHistoryContext<THistory, THistoryEntry>
-        where THistory : ITransactionalHistory
-        where THistoryEntry : IHistoryEntry
+    public interface ITransactionalHistoryContext<TParam, TResult, out THistory, in THistoryEntry> 
+        : IHistoryContext<TParam, TResult, THistory, THistoryEntry>
+    
+        where THistory : ITransactionalHistory<TParam, TResult>
+        where THistoryEntry : IHistoryEntry<TParam, TResult>
     {
-        void BeginTransaction(ITransition transition);
+        void BeginTransaction(ITransaction<TParam, TResult> transaction);
         void CommitTransaction();
         void RollbackTransaction();
     }

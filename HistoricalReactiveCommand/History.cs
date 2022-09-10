@@ -6,10 +6,10 @@ using System.Reactive.Subjects;
 
 namespace HistoricalReactiveCommand
 {
-    public class History: IHistory
+    public class History<TParam, TResult> : IHistory<TParam, TResult>
     {
-        private Stack<IHistoryEntry> StackRedo { get; } = new();
-        private Stack<IHistoryEntry> StackUndo { get; } = new();
+        private Stack<IHistoryEntry<TParam, TResult>> StackRedo { get; } = new();
+        private Stack<IHistoryEntry<TParam, TResult>> StackUndo { get; } = new();
         
         private readonly Subject<bool> _canSnapshot = new();
         private readonly Subject<bool> _canUndo = new();
@@ -50,8 +50,8 @@ namespace HistoricalReactiveCommand
             StackUndo.Push(entry);
             UpdateSubjects();
         }
-
-        public void Snapshot(IHistoryEntry entry)
+        
+        public void Snapshot(IHistoryEntry<TParam, TResult> entry)
         {
             StackRedo.Clear();
             UpdateSubjects(true);

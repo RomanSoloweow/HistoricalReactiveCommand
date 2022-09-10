@@ -1,9 +1,9 @@
 ﻿namespace HistoricalReactiveCommand
 {
-    public interface IGrouping<in TParam, in TResult>
+    public interface IGrouping<TParam, TResult>
     {
         public void Append(IHistoryEntryForGroup<TParam, TResult> entry);
-        IHistoryEntry Group();
+        IHistoryEntryForGroup<TParam, TResult> Group();
         void Rollback();
         bool IsEmpty { get; }
     }

@@ -7,9 +7,9 @@ using Splat;
 
 namespace HistoricalReactiveCommand
 {
-    public sealed class HistoryContext: IHistoryContext<IHistory, IHistoryEntry>, IDisposable
+    public static class HistoryContext
     {
-        internal static IHistoryContext<IHistory, IHistoryEntry> GetContext(IHistory history, IScheduler? outputScheduler = null)
+        internal static IHistoryContext<TParam, TResult, IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> GetContext<TParam, TResult>(IHistory<TParam, TResult> history, IScheduler? outputScheduler = null)
         {
             if (history == null)
             {
@@ -21,38 +21,43 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(history.Id));
             }
         
-            var context = Locator.Current.GetService<IHistoryContext<IHistory, IHistoryEntry>>(history.Id);
+            var context = Locator.Current.GetService<IHistoryContext<TParam, TResult, IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>>>(history.Id);
         
             if (context != null)
             {
                 return context;
             }
         
-            context = new HistoryContext(history, outputScheduler ?? RxApp.MainThreadScheduler);
+            context = new HistoryContext<TParam, TResult>(history, outputScheduler ?? RxApp.MainThreadScheduler);
             Locator.CurrentMutable.RegisterConstant(context, history.Id);
             return context;
         }
 
-        internal static IHistoryContext<IHistory, IHistoryEntry> GetContext(string historyId = "", IScheduler? outputScheduler = null)
+        internal static IHistoryContext<TParam, TResult, IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> GetContext<TParam, TResult>(string historyId = "", IScheduler? outputScheduler = null)
         {
             if (historyId == null)
             {
                 throw new ArgumentNullException(nameof(historyId));
             }
         
-            var context = Locator.Current.GetService<IHistoryContext<IHistory, IHistoryEntry>>(historyId);
+            var context = Locator.Current.GetService<IHistoryContext<TParam, TResult, IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>>>(historyId);
         
             if (context != null)
             {
                 return context;
             }
         
-            context = new HistoryContext(new History(historyId), outputScheduler ?? RxApp.MainThreadScheduler);
+            context = new HistoryContext<TParam, TResult>(new History<TParam, TResult>(historyId), outputScheduler ?? RxApp.MainThreadScheduler);
             Locator.CurrentMutable.RegisterConstant(context, historyId);
             return context;
         }
+    }
+    
+    public sealed class HistoryContext<TParam, TResult>: IHistoryContext<TParam, TResult, IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>>, IDisposable
+    {
+        private IHistory<TParam, TResult> _history;
         
-        internal HistoryContext(IHistory history, IScheduler outputScheduler)
+        internal HistoryContext(IHistory<TParam, TResult>  history, IScheduler outputScheduler)
         {
             History = history;
 
@@ -69,13 +74,14 @@ namespace HistoricalReactiveCommand
             Clear = ReactiveCommand.Create(history.Clear, history.CanClear, outputScheduler);
         }
 
-        public IHistory History { get; }
+        public IHistory<TParam, TResult> History { get; }
+        
         public ReactiveCommand<Unit, Unit> Undo { get;  }
         
         public ReactiveCommand<Unit, Unit> Redo { get;  }
         
         public ReactiveCommand<Unit, Unit> Clear { get;  }
-
+        
         public void Dispose()
         {
             Undo.Dispose();
@@ -83,7 +89,10 @@ namespace HistoricalReactiveCommand
             Clear.Dispose();
         }
 
-        public void Snapshot(IHistoryEntry entry) => History.Snapshot(entry);
+        public void Snapshot(IHistoryEntry<TParam, TResult> entry) => History.Snapshot(entry);
+
+        IHistory<TParam, TResult> IHistoryContext<TParam, TResult, IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>>.History => _history;
+
         public IObservable<bool> CanSnapshot => History.CanSnapshot;
 
     }

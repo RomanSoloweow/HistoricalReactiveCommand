@@ -20,14 +20,13 @@ namespace HistoricalReactiveCommand.Tests
                 (number) => { myNumber -= number; },
                 Observables.True, _scheduler);
 
-            command.History.BeginTransaction(new Transition());
+            command.History.BeginTransaction(new Transaction<int>());
             command.Execute(25).Subscribe();
             command.Execute(25).Subscribe();
             command.Execute(25).Subscribe();
             command.Execute(25).Subscribe();
             command.History.CommitTransaction();
             Assert.Equal(100, myNumber);
-            
         }
         
         [Fact]
@@ -39,7 +38,7 @@ namespace HistoricalReactiveCommand.Tests
                 (number) => { myNumber -= number; },
                 Observables.True, _scheduler);
 
-            command.History.BeginTransaction(new Transition());
+            command.History.BeginTransaction(new Transaction<int>());
             command.Execute(25).Subscribe();
             command.Execute(25).Subscribe();
             command.Execute(25).Subscribe();
@@ -56,8 +55,8 @@ namespace HistoricalReactiveCommand.Tests
                 (number) => { myNumber += number; },
                 (number) => { myNumber -= number; },
                 Observables.True, _scheduler);
-
-            command.History.BeginTransaction(new Transition());
+            
+            command.History.BeginTransaction(new Transaction<int>());
             command.Execute(25).Subscribe();
             command.Execute(25).Subscribe();
             command.Execute(25).Subscribe();

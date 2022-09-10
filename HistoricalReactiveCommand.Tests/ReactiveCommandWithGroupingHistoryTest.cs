@@ -25,7 +25,7 @@ namespace HistoricalReactiveCommand.Tests
 
                 var group = command.CreateGroupingByParameter(ints =>
                 {
-                    return ints.Sum(x => x);
+                    ints.Sum(x => x);
                 });
                 
                 command.StartGrouping(group);
@@ -49,7 +49,7 @@ namespace HistoricalReactiveCommand.Tests
 
                 var group = command.CreateGroupingByParameter(ints =>
                 {
-                    return ints.Sum(x => x);
+                    ints.Sum(x => x);
                 });
                     
                 command.StartGrouping(group);
@@ -72,7 +72,7 @@ namespace HistoricalReactiveCommand.Tests
 
                 var group = command.CreateGroupingByParameter(ints =>
                 {
-                    return ints.Sum(x => x);
+                    ints.Sum(x => x);
                 });
                     
                 command.StartGrouping(group);

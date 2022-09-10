@@ -1,10 +1,13 @@
-﻿namespace HistoricalReactiveCommand
+﻿using System.Collections.Generic;
+
+namespace HistoricalReactiveCommand
 {
-    public interface ITransition
+    public interface ITransaction<TParam, TResult>
     {
-        void Append(IHistoryEntry entry);
-        void Execute(IHistory history);
-        void Discard(IHistory history);
+        void Append(IHistoryEntry<TParam, TResult> entry);
+        void Execute();
+        void Discard();
         bool IsEmpty { get; }
+        IEnumerable<IHistoryEntry<TParam, TResult>> GetCommands();
     }
 }

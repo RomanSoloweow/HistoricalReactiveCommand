@@ -1,8 +1,8 @@
 ﻿namespace HistoricalReactiveCommand
 {
-    public interface ITransactionalHistory:IHistory
+    public interface ITransactionalHistory<TParam, TResult> : IHistory<TParam, TResult>
     {
-        void BeginTransaction(ITransition transition);
+        void BeginTransaction(ITransaction<TParam, TResult> transaction);
         void CommitTransaction();
         void RollbackTransaction();
     }

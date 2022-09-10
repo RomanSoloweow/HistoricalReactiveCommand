@@ -1,34 +1,35 @@
 ﻿using System.Reactive.Concurrency;
+using System.Reflection;
 using ReactiveUI;
 
 namespace HistoricalReactiveCommand
 {
     public static class HistoryEx
     {
-        public static ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> 
-            RegisterTransactionalHistory(ITransactionalHistory history, 
+        public static ITransactionalHistoryContext<TParam, TResult, ITransactionalHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> 
+            RegisterTransactionalHistory<TParam, TResult>(ITransactionalHistory<TParam, TResult> history, 
             IScheduler? outputScheduler = null)
         {
-            return TransactionalHistoryContext.GetContext(history, outputScheduler ?? RxApp.MainThreadScheduler);
+            return TransactionalHistoryContext.GetContext<TParam, TResult>(history, outputScheduler ?? RxApp.MainThreadScheduler);
         }
         
-        public static ITransactionalHistoryContext<ITransactionalHistory, IHistoryEntry> 
-            RegisterTransactionalHistory(string historyId = "", 
+        public static ITransactionalHistoryContext<TParam, TResult, ITransactionalHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> 
+            RegisterTransactionalHistory<TParam, TResult>(string historyId = "", 
             IScheduler? outputScheduler = null)
         {
-            return TransactionalHistoryContext.GetContext(historyId, outputScheduler ?? RxApp.MainThreadScheduler);
+            return TransactionalHistoryContext.GetContext<TParam, TResult>(historyId, outputScheduler ?? RxApp.MainThreadScheduler);
         }
         
-        public static IHistoryContext<IHistory, IHistoryEntry> RegisterHistory(ITransactionalHistory history, 
-            IScheduler? outputScheduler = null)
+        public static IHistoryContext<TParam, TResult, IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> 
+            RegisterHistory<TParam, TResult>(ITransactionalHistory<TParam, TResult> history, IScheduler? outputScheduler = null)
         {
-            return HistoryContext.GetContext(history, outputScheduler ?? RxApp.MainThreadScheduler);
+            return HistoryContext.GetContext<TParam, TResult>(history, outputScheduler ?? RxApp.MainThreadScheduler);
         }
         
-        public static IHistoryContext<IHistory, IHistoryEntry> RegisterHistory(string historyId = "", 
+        public static IHistoryContext<TParam, TResult, IHistory<TParam, TResult>, IHistoryEntry<TParam, TResult>> RegisterHistory<TParam, TResult>(string historyId = "", 
             IScheduler? outputScheduler = null)
         {
-            return HistoryContext.GetContext(historyId, outputScheduler ?? RxApp.MainThreadScheduler);
+            return HistoryContext.GetContext<TParam, TResult>(historyId, outputScheduler ?? RxApp.MainThreadScheduler);
         }
     }
 }

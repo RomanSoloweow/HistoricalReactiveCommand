@@ -1,32 +1,44 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 
 namespace HistoricalReactiveCommand
 {
-    public class Transition:ITransition
+    public class Transaction<TParam, TResult> : ITransaction<TParam, TResult>
     {
-        private List<IHistoryEntry> Operations { get; } = new();
-        public void Append(IHistoryEntry entry)
+        private List<IHistoryEntry<TParam, TResult>> Commands { get; } = new();
+        
+        public void Append(IHistoryEntry<TParam, TResult> entry)
         {
-            Operations.Add(entry);
+            Commands.Add(entry);
         }
 
-        public void Execute(IHistory history)
+        public void Execute()
         {
-            foreach (var operation in Operations)
+            foreach (var operation in Commands)
             {
                 operation.Redo();
             }
         }
 
-        public void Discard(IHistory history)
+        public void Discard()
         {
-            foreach (var operation in Operations)
+            foreach (var operation in Commands)
             {
                 operation.Undo();
             }
         }
 
-        public bool IsEmpty => !Operations.Any();
+        public bool IsEmpty => !Commands.Any();
+        
+        public IEnumerable<IHistoryEntry<TParam, TResult>> GetCommands()
+        {
+            return Commands;
+        }
+    }
+    
+    public class Transaction<TParam> : Transaction<TParam, Unit>
+    {
+        
     }
 }
