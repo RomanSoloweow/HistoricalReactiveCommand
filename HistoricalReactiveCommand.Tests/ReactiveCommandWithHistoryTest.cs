@@ -42,10 +42,13 @@ namespace HistoricalReactiveCommand.Tests
         public void ShouldManageCommandHistory()
         {
             int myNumber = 0;
-            var command = ReactiveCommandWithHistory.CreateWithHistory<int>(
+            var command = ReactiveCommandWithHistory.CreateWithHistory<int>
+            (
+            "additional",
              (number) => { myNumber += number; },
              (number) => { myNumber -= number; },
-              Observables.True, _scheduler);
+              Observables.True, _scheduler
+             );
 
             command.Execute(25).Subscribe();
             Assert.Equal(25, myNumber);

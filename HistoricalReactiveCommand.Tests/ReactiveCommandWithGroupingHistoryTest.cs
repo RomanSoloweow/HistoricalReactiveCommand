@@ -155,7 +155,7 @@ namespace HistoricalReactiveCommand.Tests
                 {
                     var param = args.Select(x => x.Item1).Sum(x => x);
                     return (param, Unit.Default);
-                    ;                });
+                });
                     
                 command.StartGrouping(group);
                 command.Execute(25).Subscribe();

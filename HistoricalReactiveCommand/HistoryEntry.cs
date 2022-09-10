@@ -4,17 +4,16 @@ namespace HistoricalReactiveCommand
 {
     public class HistoryEntry<TParam, TResult> : IHistoryEntry<TParam, TResult>
     {
-        public HistoryEntry(Action<HistoryEntry<TParam, TResult>> undo, Action<HistoryEntry<TParam, TResult> > redo, TParam param, TResult result)
+        public HistoryEntry(string commandKey, TParam param, TResult result)
         {
             Param = param;
             Result = result;
-            Undo = () => undo(this);
-            Redo = () => redo(this);
+            CommandKey = commandKey;
         }
-        public Action Undo { get; }
-        public Action Redo { get; }
+        
         public TParam Param { get; }
         public TResult Result { get; }
+        public string CommandKey { get; }
     }
 }
 

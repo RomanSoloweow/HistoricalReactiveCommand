@@ -10,10 +10,11 @@ namespace HistoricalReactiveCommand
         {
             
         }
-
+        
         public Action Undo { get; }
         public Action Redo { get; }
         public TParam Param { get; }
         public TResult Result { get; }
+        public string CommandKey { get; }
     }
 }
