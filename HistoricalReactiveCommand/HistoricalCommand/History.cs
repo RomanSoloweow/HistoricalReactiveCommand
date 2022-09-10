@@ -10,8 +10,8 @@ namespace HistoricalReactiveCommand
 {
     public class History : IHistory, IDisposable
     {
-        private Stack<HistoryEntry> StackRedo { get; } = new Stack<HistoryEntry>();
-        private Stack<HistoryEntry> StackUndo { get; } = new Stack<HistoryEntry>();
+        private Stack<IHistoryEntryBase> StackRedo { get; } = new Stack<IHistoryEntryBase>();
+        private Stack<IHistoryEntryBase> StackUndo { get; } = new Stack<IHistoryEntryBase>();
         
         private readonly Subject<bool> _canRecord = new Subject<bool>();
         private readonly Subject<bool> _canUndo = new Subject<bool>();
@@ -29,8 +29,9 @@ namespace HistoricalReactiveCommand
         public IObservable<bool> CanRedo => _canRedo.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanRecord => _canRecord.AsObservable().DistinctUntilChanged();
         public IObservable<bool> CanClear => _canClear.AsObservable().DistinctUntilChanged();
-
-        public IObservable<HistoryEntry> Undo(Func<HistoryEntry, IObservable<HistoryEntry>> discard)
+        
+        public IObservable<THistoryEntry> Undo<THistoryEntry>(Func<IHistoryEntryBase, IObservable<THistoryEntry>> discard) 
+            where THistoryEntry : IHistoryEntryBase
         {
             if (StackUndo.Count == 0)
                 throw new Exception();
@@ -43,7 +44,8 @@ namespace HistoricalReactiveCommand
             });
         }
 
-        public IObservable<HistoryEntry> Redo(Func<HistoryEntry, IObservable<HistoryEntry>> execute)
+        public IObservable<THistoryEntry> Redo<THistoryEntry>(Func<IHistoryEntryBase, IObservable<THistoryEntry>> execute)
+            where THistoryEntry : IHistoryEntryBase
         {
             if (StackRedo.Count == 0)
                 throw new Exception();
@@ -56,7 +58,8 @@ namespace HistoricalReactiveCommand
             });
         }
 
-        public IObservable<HistoryEntry> Record(HistoryEntry entry, Func<HistoryEntry, IObservable<HistoryEntry>> execute)
+        public IObservable<THistoryEntry> Record<THistoryEntry>(THistoryEntry entry, Func<THistoryEntry, IObservable<THistoryEntry>> execute) 
+            where THistoryEntry : IHistoryEntryBase
         {
             StackRedo.Clear();
             UpdateSubjects(true);

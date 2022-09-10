@@ -18,4 +18,16 @@
     <PackageReference Include="ReactiveUI" Version="14.1.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="New\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="New\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="New\**" />
+  </ItemGroup>
+
 </Project>

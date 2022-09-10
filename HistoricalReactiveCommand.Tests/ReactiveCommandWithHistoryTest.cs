@@ -24,7 +24,7 @@ namespace HistoricalReactiveCommand.Tests
         [Fact]
         public void CreateSomeCommandsWithSameKey()
         {
-            ICommand command1 = ReactiveCommandEx.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
+            ICommand command1 = ReactiveCommandWithHistory.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
                 (parameter, result) => Observables.Unit,
                 (parameter, result) => Observables.Unit,
                 _canExecuteSubject,
@@ -32,7 +32,7 @@ namespace HistoricalReactiveCommand.Tests
             
             Assert.Throws<ArgumentException>(() =>
             {
-                ICommand command2 = ReactiveCommandEx.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
+                ICommand command2 = ReactiveCommandWithHistory.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
                     (parameter, result) => Observables.Unit,
                     (parameter, result) => Observables.Unit,
                     _canExecuteSubject,
@@ -43,7 +43,7 @@ namespace HistoricalReactiveCommand.Tests
         [Fact]
         public void CanExecuteChangedIsAvailableViaICommand()
         {
-            ICommand fixture = ReactiveCommandEx.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
+            ICommand fixture = ReactiveCommandWithHistory.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
                 (parameter, result) => Observables.Unit,
                 (parameter, result) => Observables.Unit,
                 _canExecuteSubject,
@@ -64,7 +64,7 @@ namespace HistoricalReactiveCommand.Tests
         public void ShouldManageCommandHistory()
         {
             int myNumber = 0;
-            var command = ReactiveCommandEx.CreateWithHistory<int>("adding",
+            var command = ReactiveCommandWithHistory.CreateWithHistory<int>("adding",
              (number) => { myNumber += number; },
              (number) => { myNumber -= number; },
               Observables.True, _scheduler);
@@ -87,7 +87,7 @@ namespace HistoricalReactiveCommand.Tests
         public async Task CanExecuteChangeOnExecutingCommandAsync()
         {
 
-            ICommand fixture = ReactiveCommandEx.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
+            ICommand fixture = ReactiveCommandWithHistory.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
               (parameter, result) => Observables.Unit,
               (parameter, result) => Observables.Unit,
               _canExecuteSubject,
