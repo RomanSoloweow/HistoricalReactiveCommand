@@ -49,8 +49,16 @@ namespace HistoricalReactiveCommand
             {
                 return context;
             }
+            
+            var history = Locator.Current.GetService<IHistory>(historyId);
+            
+            if (history == null)
+            {
+                history = new History(historyId);
+                Locator.CurrentMutable.RegisterConstant(history, historyId);
+            }
 
-            context = new HistoryContext<TParam, TResult>(new History(historyId), outputScheduler ?? RxApp.MainThreadScheduler);
+            context = new HistoryContext<TParam, TResult>(history, outputScheduler ?? RxApp.MainThreadScheduler);
             Locator.CurrentMutable.RegisterConstant(context, historyId);
             return context;
         }
@@ -62,20 +70,20 @@ namespace HistoricalReactiveCommand
         {
             History = history;
             
-            var CanUndo = history.CanRecord
+            var canUndo = history.CanRecord
                 .CombineLatest(history.CanUndo, (recordable, executable) => recordable && executable);
             
             Undo = ReactiveCommand.CreateFromObservable<Unit, IHistoryEntry<TParam, TResult>>(
                 unit => history.Undo(entry => ResolveCommand(entry).Discard(entry)),
-                CanUndo, 
+                canUndo, 
                 outputScheduler);
             
-            var CanRedo = history.CanRecord
+            var canRedo = history.CanRecord
                 .CombineLatest(history.CanRedo, (recordable, executable) => recordable && executable);
             
             Redo = ReactiveCommand.CreateFromObservable<Unit, IHistoryEntry<TParam, TResult>>(
                 unit => history.Redo(entry => ResolveCommand(entry).Execute(entry)),
-                 CanRedo, outputScheduler);
+                 canRedo, outputScheduler);
             
             Clear = ReactiveCommand.CreateFromObservable(
                 history.Clear, 
