@@ -24,7 +24,7 @@ namespace HistoricalReactiveCommand.Tests
         [Fact]
         public void CreateSomeCommandsWithSameKey()
         {
-            ICommand command1 = ReactiveCommandWithHistory.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
+            ICommand command1 = ReactiveCommandWithHistoryEx.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
                 (parameter, result) => Observables.Unit,
                 (parameter, result) => Observables.Unit,
                 _canExecuteSubject,
@@ -32,7 +32,7 @@ namespace HistoricalReactiveCommand.Tests
             
             Assert.Throws<ArgumentException>(() =>
             {
-                ICommand command2 = ReactiveCommandWithHistory.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
+                ICommand command2 = ReactiveCommandWithHistoryEx.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
                     (parameter, result) => Observables.Unit,
                     (parameter, result) => Observables.Unit,
                     _canExecuteSubject,
@@ -43,7 +43,7 @@ namespace HistoricalReactiveCommand.Tests
         [Fact]
         public void CanExecuteChangedIsAvailableViaICommand()
         {
-            ICommand fixture = ReactiveCommandWithHistory.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
+            ICommand fixture = ReactiveCommandWithHistoryEx.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
                 (parameter, result) => Observables.Unit,
                 (parameter, result) => Observables.Unit,
                 _canExecuteSubject,
@@ -64,7 +64,7 @@ namespace HistoricalReactiveCommand.Tests
         public void ShouldManageCommandHistory()
         {
             int myNumber = 0;
-            var command = ReactiveCommandWithHistory.CreateWithHistory<int>("adding",
+            var command = ReactiveCommandWithHistoryEx.CreateWithHistory<int>("adding",
              (number) => { myNumber += number; },
              (number) => { myNumber -= number; },
               Observables.True, _scheduler);
@@ -73,21 +73,50 @@ namespace HistoricalReactiveCommand.Tests
             Assert.Equal(25, myNumber);
             command.Execute(25).Subscribe();
             Assert.Equal(50, myNumber);
+            
             command.History.Undo.Execute().Subscribe();
             Assert.Equal(25, myNumber);
             command.History.Undo.Execute().Subscribe();
             Assert.Equal(0, myNumber);
+            
             command.History.Redo.Execute().Subscribe();
             Assert.Equal(25, myNumber);
             command.History.Redo.Execute().Subscribe();
+            Assert.Equal(50, myNumber);
+        }
+        
+        [Fact]
+        public void ShouldUndoRedoFromHistory()
+        {
+            int myNumber = 0;
+            
+            var history = HistoryContextEx.GetContext("test");
+            
+            var command = ReactiveCommandWithHistoryEx.CreateWithHistory<int>("adding",
+                (number) => { myNumber += number; },
+                (number) => { myNumber -= number; }, 
+                history, Observables.True, _scheduler);
+
+            command.Execute(25).Subscribe();
+            Assert.Equal(25, myNumber);
+            command.Execute(25).Subscribe();
+            Assert.Equal(50, myNumber);
+            
+            history.Undo.Execute().Subscribe();
+            Assert.Equal(25, myNumber);
+            history.Undo.Execute().Subscribe();
+            Assert.Equal(0, myNumber);
+            
+            history.Redo.Execute().Subscribe();
+            Assert.Equal(25, myNumber);
+            history.Redo.Execute().Subscribe();
             Assert.Equal(50, myNumber);
         }
 
         [Fact]
         public async Task CanExecuteChangeOnExecutingCommandAsync()
         {
-
-            ICommand fixture = ReactiveCommandWithHistory.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
+            ICommand fixture = ReactiveCommandWithHistoryEx.CreateWithHistoryFromObservable<Unit, Unit>(CommandKey,
               (parameter, result) => Observables.Unit,
               (parameter, result) => Observables.Unit,
               _canExecuteSubject,

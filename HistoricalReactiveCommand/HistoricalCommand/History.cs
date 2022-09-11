@@ -18,7 +18,7 @@ namespace HistoricalReactiveCommand
         private readonly Subject<bool> _canRedo = new Subject<bool>();
         private readonly Subject<bool> _canClear = new Subject<bool>();
 
-        public History(string id)
+        internal History(string id)
         {
             Id = id;
         }

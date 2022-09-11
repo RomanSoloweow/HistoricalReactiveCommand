@@ -15,7 +15,7 @@
 //         public void ShouldResolveDifferentContextsForDifferentHistories()
 //         {
 //             string historyKey = Guid.NewGuid().ToString();
-//             var createdContext = new HistoryContext(new History(historyKey), _scheduler);
+//             var createdContext = new HistoryContext<>(historyKey), _scheduler);
 //             Locator.CurrentMutable.RegisterConstant(createdContext, historyKey);
 //             var context = HistoryContext.GetContext(historyKey);
 //

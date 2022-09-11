@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using HistoricalReactiveCommand.Imports;
 using ReactiveUI;
 using Splat;
 
 namespace HistoricalReactiveCommand
 {
-    public static class HistoryContext
+    public static class HistoryContextEx
     {
-        internal static HistoryContext<TParam, TResult> GetContext<TParam, TResult> (IHistory history, IScheduler? outputScheduler = null)
+        internal static HistoryContext GetContext (IHistory history, IScheduler? outputScheduler = null)
         {
             if (history == null)
             {
@@ -23,48 +22,40 @@ namespace HistoricalReactiveCommand
                 throw new ArgumentNullException(nameof(history.Id));
             }
 
-            var context = Locator.Current.GetService<HistoryContext<TParam, TResult>>(history.Id);
+            var context = Locator.Current.GetService<HistoryContext>(history.Id);
 
             if (context != null)
             {
                 return context;
             }
 
-            context = new HistoryContext<TParam, TResult>(history, outputScheduler ?? RxApp.MainThreadScheduler);
+            context = new HistoryContext(history, outputScheduler ?? RxApp.MainThreadScheduler);
             
             Locator.CurrentMutable.RegisterConstant(context, history.Id);
             return context;
         }
 
-        internal static HistoryContext<TParam, TResult> GetContext<TParam, TResult> (string historyId = "", IScheduler? outputScheduler = null)
+        internal static HistoryContext GetContext (string historyId = "", IScheduler? outputScheduler = null)
         {
             if (historyId == null)
             {
                 throw new ArgumentNullException(nameof(historyId));
             }
 
-            var context = Locator.Current.GetService<HistoryContext<TParam, TResult>>(historyId);
+            var context = Locator.Current.GetService<HistoryContext>(historyId);
 
             if (context != null)
             {
                 return context;
             }
             
-            var history = Locator.Current.GetService<IHistory>(historyId);
-            
-            if (history == null)
-            {
-                history = new History(historyId);
-                Locator.CurrentMutable.RegisterConstant(history, historyId);
-            }
-
-            context = new HistoryContext<TParam, TResult>(history, outputScheduler ?? RxApp.MainThreadScheduler);
+            context = new HistoryContext(new History(historyId), outputScheduler ?? RxApp.MainThreadScheduler);
             Locator.CurrentMutable.RegisterConstant(context, historyId);
             return context;
         }
     }
     
-    public sealed class HistoryContext<TParam, TResult> : IHistoryContext<TParam, TResult>, IDisposable
+    public sealed class HistoryContext : IHistoryContext, IDisposable
     {
         internal HistoryContext(IHistory history, IScheduler outputScheduler)
         {
@@ -73,16 +64,16 @@ namespace HistoricalReactiveCommand
             var canUndo = history.CanRecord
                 .CombineLatest(history.CanUndo, (recordable, executable) => recordable && executable);
             
-            Undo = ReactiveCommand.CreateFromObservable<Unit, IHistoryEntry<TParam, TResult>>(
-                unit => history.Undo(entry => ResolveCommand(entry).Discard(entry)),
+            Undo = ReactiveCommand.CreateFromObservable<Unit, Unit>(
+                unit => history.Undo(entry => ResolveCommand(entry).Discard(entry)).Select(_ => Unit.Default),
                 canUndo, 
                 outputScheduler);
             
             var canRedo = history.CanRecord
                 .CombineLatest(history.CanRedo, (recordable, executable) => recordable && executable);
             
-            Redo = ReactiveCommand.CreateFromObservable<Unit, IHistoryEntry<TParam, TResult>>(
-                unit => history.Redo(entry => ResolveCommand(entry).Execute(entry)),
+            Redo = ReactiveCommand.CreateFromObservable<Unit, Unit>(
+                unit => history.Redo(entry => ResolveCommand(entry).Execute(entry)).Select(_ => Unit.Default),
                  canRedo, outputScheduler);
             
             Clear = ReactiveCommand.CreateFromObservable(
@@ -91,7 +82,7 @@ namespace HistoricalReactiveCommand
                 outputScheduler);
         }
         
-        private static IReactiveCommandWithHistory<TParam, TResult> ResolveCommand(IHistoryEntryBase entry)
+        private static IReactiveCommandWithHistory<TParam, TResult> ResolveCommand<TParam, TResult>(IHistoryEntry<TParam, TResult> entry)
         {
             if (string.IsNullOrWhiteSpace(entry.CommandKey))
                 throw new ArgumentException("Command key is null.", nameof(entry));
@@ -104,13 +95,27 @@ namespace HistoricalReactiveCommand
             return command;
         }
         
+        private static IReactiveCommandWithHistoryBase ResolveCommand(IHistoryEntryBase entry)
+        {
+            if (string.IsNullOrWhiteSpace(entry.CommandKey))
+                throw new ArgumentException("Command key is null.", nameof(entry));
+            
+            var command = Locator.Current.GetService<IReactiveCommandWithHistoryBase>(entry.CommandKey);
+        
+            if (command == null)
+                throw new KeyNotFoundException($"Command with key '{entry.CommandKey}' wasn't registered.");
+        
+            return command;
+        }
+        
         public IHistory History { get; }
         public IObservable<bool> CanSnapshot => History.CanRecord;
-        public ReactiveCommand<Unit, IHistoryEntry<TParam, TResult>> Undo { get; }
-        public ReactiveCommand<Unit, IHistoryEntry<TParam, TResult>> Redo { get; }
+
+        public ReactiveCommand<Unit, Unit> Undo { get; }
+        public ReactiveCommand<Unit, Unit> Redo { get; }
         public ReactiveCommand<Unit, Unit> Clear { get; }
         
-        public IObservable<IHistoryEntry<TParam, TResult>> Snapshot(IHistoryEntry<TParam, TResult> entry)
+        public IObservable<IHistoryEntry<TParam, TResult>> Snapshot<TParam, TResult>(IHistoryEntry<TParam, TResult> entry)
         {
             var command = ResolveCommand(entry);
             return History.Record(entry, command.Execute);

@@ -3,9 +3,9 @@ using ReactiveUI;
 
 namespace HistoricalReactiveCommand
 {
-    public interface IReactiveCommandWithHistory<out TParam, out TResult> : IReactiveCommand
+    public interface IReactiveCommandWithHistory<TParam, TResult> : IReactiveCommandWithHistoryBase
     {
-        IObservable<IHistoryEntry<TParam, TResult>> Execute(IHistoryEntryBase entry);
+        IObservable<IHistoryEntry<TParam, TResult>> Execute(IHistoryEntry<TParam, TResult> entry);
         IObservable<IHistoryEntry<TParam, TResult>> Discard(IHistoryEntryBase entry);
     }
 }

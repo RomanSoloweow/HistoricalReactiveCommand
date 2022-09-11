@@ -19,15 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="New\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Remove="New\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="New\**" />
+    <Compile Include="New\GroupingAsEntry.cs" />
   </ItemGroup>
 
 </Project>
